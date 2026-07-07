@@ -331,15 +331,15 @@
     <h2>Overview</h2>
     <span class="section-tag">Saturday 22 August 2026 · Oxford</span>
   </div>
-  <p class="lede">St Margaret's Church at 13:00, followed by the reception at The Medley Walled Garden. Built from the live Wedding Planner spreadsheet, the Supabase RSVP export, and the Life Summary files — last pulled 4 July 2026.</p>
+  <p class="lede">St Margaret's Church at 13:00, followed by the reception at The Medley Walled Garden. Guest counts below are live from Supabase (<span id="ccSyncStatus">connecting…</span>); budget figures from the Wedding Planner spreadsheet, pulled 7 July 2026.</p>
 
   <div class="stat-grid">
-    <div class="stat"><span class="n">112</span><span class="l">Guests confirmed yes</span></div>
-    <div class="stat warn"><span class="n">3</span><span class="l">Declined (Georgia Grant, Jules Stapleton&nbsp;Barnes, Victoria&nbsp;Stapleton)</span></div>
-    <div class="stat"><span class="n">86</span><span class="l">Coming to Friday cricket</span></div>
+    <div class="stat"><span class="n" id="statYes">—</span><span class="l">Guests confirmed yes</span></div>
+    <div class="stat warn"><span class="n" id="statDeclinedCount">—</span><span class="l" id="statDeclinedLabel">Declined</span></div>
+    <div class="stat"><span class="n" id="statCricket">—</span><span class="l">Coming to Friday cricket</span></div>
     <div class="stat"><span class="n">£41,315</span><span class="l">Total budget (est.)</span></div>
     <div class="stat warn"><span class="n">£13,635</span><span class="l">Still to pay across July–Aug</span></div>
-    <div class="stat"><span class="n">45</span><span class="l">Dietary/allergy notes on file</span></div>
+    <div class="stat"><span class="n" id="statDietary">—</span><span class="l">Dietary/allergy notes on file</span></div>
   </div>
 
   <div class="section-tag" style="margin-bottom:12px;display:block;">Next six weeks — payment &amp; planning deadlines</div>
@@ -397,6 +397,7 @@
     <div class="todo-body"><ul>
       <li>Menu and contract with Shakespeare Kitchen are locked (£8,571.24, 120 guests, confirmed 30 June).</li>
       <li>Still open: tea/coffee service, and table linens — venue only supplies paper napkins, so Ed &amp; Laura are sourcing tablecloths themselves.</li>
+      <li><span class="flag">A new "Estimate 1463" arrived from Shakespeare Kitchen on 6 July, not yet reconciled against the confirmed £8,571.24 contract.</span> Worth checking with Ian Jobbins what it covers before assuming it's just an amendment.</li>
       <li><span class="flag">The dietary list sent to Ian Jobbins is out of date.</span> The live RSVP export has ~20 dietary notes on file (see Who's Who → Dietary requirements), well beyond the five originally flagged — send Ian the full current list.</li>
       <li>Send the finished table plan to Ian once it's signed off (still outstanding since the 15 June meeting).</li>
     </ul></div>
@@ -409,6 +410,7 @@
       <li>Bring the "Starford Lager" tap badge (and any other beer badges) to the venue.</li>
       <li>Confirm how many of each cocktail are wanted for the one-hour cocktail service.</li>
       <li>Venue balance of £3,720 due 24 July.</li>
+      <li><span class="flag">Wet-weather taxi quote still open</span> — ongoing thread with Royal Cars (Mohammed Yahya) for a St Margaret's → Medley fallback if the Port Meadow walk isn't viable in rain; not yet quoted or booked.</li>
     </ul></div>
   </div>
 
@@ -440,18 +442,19 @@
   <div class="todo-cat">
     <div class="todo-cat-head"><h3>Suits &amp; outfits</h3><span class="pill pill-med">Medium priority</span><span class="pill pill-progress">In progress</span></div>
     <div class="todo-body"><ul>
-      <li>Groomsmen morning-suit hire (Moss Bros, regular-fit tails, sky-blue double-breasted waistcoat) enquiry sent 1 July for the 8-person party — Ed, George Stapleton, Mark Stapleton, Chris Murphy, Tom Kilford, Harry Wilson, Tom Stevens, George Rendall. Awaiting Moss Bros' quote and an in-store measuring visit. Order needs to be ready to collect 4 days before the wedding.</li>
+      <li>Groomsmen morning-suit hire (Moss Bros, regular-fit tails, sky-blue double-breasted waistcoat) enquiry sent 1 July for the 8-person party — Ed, George Stapleton, Mark Stapleton, Chris Murphy, Tom Kilford, Harry Wilson, Tom Stevens, George Rendall. <strong>In-store measuring/ordering visit at Moss Bros Broadgate confirmed 6 July</strong> — worth double-checking with Ed which appointment slot this covers. Order needs to be ready to collect 4 days before the wedding.</li>
       <li>Ed's own suit is still undecided between three trialled options: Percival (personal shopping, 3 June), Moss Bros Broadgate (styling appointment, 10 June), and SELECTED (multiple sizes ordered and delivered 24 June to compare fit).</li>
+      <li>Chris Murphy is MC on the day, not a groomsman — Ed is sorting him a suit separately regardless (added 6 July).</li>
       <li>Laura's dress is done — still need to buy the veil and shoes.</li>
       <li>Flower-girl dresses and Theo's outfit are not yet sorted.</li>
     </ul></div>
   </div>
 
   <div class="todo-cat">
-    <div class="todo-cat-head"><h3>Flowers</h3><span class="pill pill-med">Medium priority</span><span class="pill pill-progress">Decision pending</span></div>
+    <div class="todo-cat-head"><h3>Flowers</h3><span class="pill pill-med">Medium priority</span><span class="pill pill-done">Decided</span></div>
     <div class="todo-body"><ul>
-      <li>Still choosing between Caroline (friend, lower cost) and Sara Jakeman at Bloomin' Chic (professional — full quotation received and acknowledged 1 June, but no final decision recorded since).</li>
-      <li>Once confirmed: 1 bridal bouquet, 5 bridesmaid bouquets (repurposed as table décor), 9 buttonholes, bud vases for the tables, and 2 entrance urns moved from the church to the Medley after the ceremony.</li>
+      <li>Decided: Sara Jakeman at Bloomin' Chic (per the planner spreadsheet's Status &amp; Actions tab — Caroline, the friend option, wasn't taken forward).</li>
+      <li>1 bridal bouquet, 5 bridesmaid bouquets (repurposed as table décor), 9 buttonholes, bud vases for the tables, and 2 entrance urns moved from the church to the Medley after the ceremony.</li>
     </ul></div>
   </div>
 
@@ -461,7 +464,7 @@
       <li>Food &amp; drink for the cricket day is still unresolved (£500 estimated, nothing booked yet).</li>
       <li>Balliol venue visit is 19 July at 15:00 — same day as the final banns reading, so the two need juggling on the day.</li>
       <li>RNG Classics car hire: enquiry sent, cars confirmed available 21 August — still need to pick a specific car and confirm the day's plan with Robbie Gillison.</li>
-      <li>86 of 112 confirmed guests are down for cricket — a team sheet is still open ("anyone interested should get in touch").</li>
+      <li>Team sheet is live below and reads straight from RSVPs — drag names in as people confirm.</li>
     </ul></div>
   </div>
 
@@ -479,9 +482,10 @@
     <div class="todo-cat-head"><h3>Accommodation</h3><span class="pill pill-high">High priority</span><span class="pill pill-done">Mostly booked</span></div>
     <div class="todo-body"><ul>
       <li>Cotswold Lodge Hotel: Feature Room confirmed for Ed, 20–23 August.</li>
-      <li>Dove House Farm (bridal party, Thursday–Sunday): balance of £3,750 due 20 July.</li>
+      <li>Dove House Farm confirmed for the bridal party, Thursday–Sunday — balance of £3,750 due 20 July. Ed &amp; Laura also stay here with siblings 23–25 Aug, after the wedding.</li>
       <li>92 Kingston Road: payment 2 of 2 (£805) due 5 August.</li>
-      <li>Groomsmen's flat in Oxford, Friday &amp; Saturday nights — Ed joining them Friday night.</li>
+      <li>Groomsparty accommodation confirmed: Airbnb "Spacious Oxford Home in the Heart of Jericho" (Kingston Road), Friday &amp; Saturday nights, booked 5 July — Ed joining them Friday night. George Stapleton staying elsewhere (TBC); Chris Murphy (MC, not groomsman) is at the Courtyard by Marriott Oxford instead.</li>
+      <li>Guest parking: 2 spaces secured on a friend's driveway at 6A Rawlinson Road via Ed's mum Liz.</li>
       <li>Kellogg College enquiry (Aug 2025) was never confirmed — safe to let lapse unless still needed.</li>
     </ul></div>
   </div>
@@ -764,7 +768,7 @@
 
 </main>
 
-<footer>Built from the "Ed &amp; Laura — Wedding Planner" spreadsheet, the Supabase RSVP export (synced 4 July 2026), and Ed's Life Summary files. Flagged items reflect genuine open questions on Ed's own working documents, not assumptions.</footer>
+<footer>Guest RSVP data, table plan and cricket teams are live from Supabase. Budget, to-do and schedule content from the "Ed &amp; Laura — Wedding Planner" spreadsheet (pulled 7 July 2026) and Ed's Life Summary files. Flagged items reflect genuine open questions on Ed's own working documents, not assumptions.</footer>
 
 </div>
 
@@ -773,6 +777,7 @@
     var ALLOWED_USERS = ['edwardstapleton@me.com', 'lem.harford@gmail.com'];
     var PASSWORD = 'STARFORD220826';
     var STORAGE_KEY = 'wcc_auth_v1';
+    var USER_KEY = 'wcc_auth_user_v1';
 
     var gate = document.getElementById('authGate');
     var app = document.getElementById('appContent');
@@ -784,6 +789,13 @@
     function unlock(){
       gate.classList.add('hidden');
       app.classList.remove('hidden');
+      window.CC_CURRENT_USER = localStorage.getItem(USER_KEY) || '';
+      // ccBoot is defined in a later inline script; by DOMContentLoaded every
+      // preceding inline script has already run, so this is always safe.
+      document.addEventListener('DOMContentLoaded', function(){
+        if (window.ccBoot) window.ccBoot();
+      });
+      if (document.readyState !== 'loading' && window.ccBoot) window.ccBoot();
     }
 
     if (localStorage.getItem(STORAGE_KEY) === '1') {
@@ -796,6 +808,7 @@
       var password = passwordInput.value || '';
       if (ALLOWED_USERS.indexOf(email) !== -1 && password === PASSWORD) {
         localStorage.setItem(STORAGE_KEY, '1');
+        localStorage.setItem(USER_KEY, email);
         errorEl.textContent = '';
         unlock();
       } else {
@@ -805,6 +818,131 @@
       }
     });
   })();
+</script>
+
+<script>
+  // ---------- Shared Supabase-backed data layer ----------
+  // Same trust model as the login gate above: this token is visible to anyone
+  // who views source on plan.edlaura.com. It only unlocks a read of live guest
+  // RSVP data plus the seating/cricket state below - it does NOT touch the
+  // guests table's own RLS policies, which stay locked to the guest RSVP site.
+  window.CC_API_URL = 'https://ipxbndockmhkfuwjyevi.supabase.co/functions/v1/command-centre-api';
+  window.CC_API_TOKEN = 'I39FRiFLZs9Ig7TQD3HrDipyUOrijqcG5L3uqiekITE';
+  window.CC_CURRENT_USER = window.CC_CURRENT_USER || '';
+  var CC_CACHE_KEY = 'wcc_data_cache_v2';
+
+  // Static side lookup (Ed / Laura / "Laura, Ed") - reconciled once against the
+  // Guestlist tab's nicknames vs the Supabase RSVP full names. Side essentially
+  // never changes post-invite, so this stays baked in; attendance, cricket
+  // attendance and dietary notes are fetched live below.
+  var GUEST_SIDES = {"Abby MacPherson":"Ed","Alex Aughterson":"Ed","Alex Macpherson":"Ed","Ashlea McKee":"Ed","Becca Stapleton":"Ed","Ben Aughterson":"Ed","Cameron Aughterson":"Ed","Catherine Critchley":"Ed","Chloe Giles":"Ed","Chris Murphy":"Ed","Christopher de Souza":"Ed","Dalya Kurer":"Ed","Dave Biggs":"Ed","David Mafullul":"Ed","Ed Kirwan":"Ed","Edward Stapleton":"Ed","Elliot Greenwood":"Ed","Emily Cleaton":"Ed","Florian Coste":"Ed","George Rendall":"Ed","George Stapleton":"Ed","Georgina Chamberlain":"Ed","Grace Gleave":"Ed","Hannah Kirwan":"Ed","Harry Wilson":"Ed","Isabel Aughterson":"Ed","Isobel Fleming":"Ed","Isobel Sherman":"Ed","James Aughterson":"Ed","James Chamberlain":"Ed","James Sherman":"Ed","James West":"Ed","Jeremy Talbot":"Ed","Jess Biggs":"Ed","Lauriane Flais":"Ed","Liz Stapleton":"Ed","Marcus Stapleton":"Ed","Mark Stapleton":"Ed","Matthew Houlden":"Ed","Meaghan Coffey":"Ed","Oliver Parsons":"Ed","Oluwasayo Sogbesan":"Ed","Peter Critchley":"Ed","Polly Kilford":"Ed","Robin Irvine":"Ed","Rosanna Talbot":"Ed","Rupert Giles":"Ed","Shruti Ayyar":"Ed","Sophie Kekwick":"Ed","Stephi Stapleton Barnes":"Ed","Tom Kilford":"Ed","Tom Stevens":"Ed","Adrian Linney":"Laura","Alasdair McCrone":"Laura","Alex Rattan":"Laura","Amy Pavlis":"Laura","Andrew Harford":"Laura","Anna Cooke":"Laura","Baldo Tranchina":"Laura","Brenda Harford":"Laura","Calum Walker":"Laura","Carlos Mandeville":"Laura","Chang-In Jung":"Laura","Chloe Rosenthal":"Laura","Christine Deacon":"Laura","Ciarán Martin":"Laura","Craig Ridley":"Laura","Daniel Harford":"Laura","Deborah Hanson":"Laura","Emily Phillips":"Laura","Fionan Walsh":"Laura","Georgia Prendergast":"Laura","Hannah Lear":"Laura","Hugh Harding":"Laura","Jack Barratt":"Laura","James Bodger":"Laura","James Harford":"Laura","Jasmine Law":"Laura","Jeremy Lee":"Laura","Jess Findlay":"Laura","Joe Riley":"Laura","Julie Howell":"Laura","Kassie Bretherton":"Laura","Kate Harford":"Laura","Katie Armour":"Laura","Kaz Bridges":"Laura","Kirsty Macintosh":"Laura","Laura Harford":"Laura","Malcolm Harford":"Laura","Martin McNulty":"Laura","Maya Kadirgamar":"Laura","Megan Ridley":"Laura","Molly Daly":"Laura","Ned Smith":"Laura","Nic Wells":"Laura","Nicholas Mann":"Laura","Nick Harford":"Laura","Nina Selmer":"Laura","Peter Harford":"Laura","Philippa Nicholson":"Laura","Rick Deacon":"Laura","Sammy Lee":"Laura","Scott Stacey":"Laura","Stephen Bridges":"Laura","Stephen Tate":"Laura","Thomas Wilson":"Laura","Toni Walsh":"Laura","Tracy Harford-Li":"Laura","Meg West":"Laura, Ed","Tobi Owens":"Laura, Ed"};
+
+  function ccDebounce(fn, wait){
+    var t = null;
+    return function(){
+      var args = arguments;
+      clearTimeout(t);
+      t = setTimeout(function(){ fn.apply(null, args); }, wait);
+    };
+  }
+
+  function ccApiGet(){
+    return fetch(window.CC_API_URL, { headers: { 'x-cc-token': window.CC_API_TOKEN } })
+      .then(function(res){
+        if(!res.ok) throw new Error('cc_api_get_' + res.status);
+        return res.json();
+      });
+  }
+
+  function ccApiPost(type, data){
+    return fetch(window.CC_API_URL, {
+      method: 'POST',
+      headers: { 'x-cc-token': window.CC_API_TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: type, data: data, updated_by: window.CC_CURRENT_USER || '' })
+    }).catch(function(err){ console.error('cc_api_post_failed', type, err); });
+  }
+
+  function ccBuildGuestList(rawGuests, filterKey){
+    // Some guests (e.g. a couple who are each other's plus-one) appear as two
+    // separate rows under two invitation groups - dedupe by label so they
+    // show once in the pool, keeping whichever row has a dietary note.
+    var byLabel = {};
+    rawGuests.forEach(function(g){
+      if(g.attendance !== 'yes') return;
+      if(filterKey && g[filterKey] !== 'yes') return;
+      var label = ((g.first_name || '') + ' ' + (g.last_name || '')).trim();
+      if(!label) return;
+      var dietaryRaw = (g.dietary || '').trim();
+      var existing = byLabel[label];
+      if(!existing || (!existing.dietary && dietaryRaw)){
+        byLabel[label] = { label: label, side: GUEST_SIDES[label] || 'Both', dietary: dietaryRaw || null };
+      }
+    });
+    var out = Object.keys(byLabel).map(function(k){ return byLabel[k]; });
+    out.sort(function(a,b){ return a.label.localeCompare(b.label); });
+    return out;
+  }
+
+  function ccRenderOverviewStats(rawGuests){
+    var yes = rawGuests.filter(function(g){ return g.attendance === 'yes'; });
+    var no = rawGuests.filter(function(g){ return g.attendance === 'no'; });
+    var cricketYes = yes.filter(function(g){ return g.cricket_attendance === 'yes'; });
+    var dietaryCount = yes.filter(function(g){ return (g.dietary || '').trim(); }).length;
+
+    var statYes = document.getElementById('statYes');
+    var statCricket = document.getElementById('statCricket');
+    var statDietary = document.getElementById('statDietary');
+    var statDeclinedCount = document.getElementById('statDeclinedCount');
+    var statDeclinedLabel = document.getElementById('statDeclinedLabel');
+    if(statYes) statYes.textContent = yes.length;
+    if(statCricket) statCricket.textContent = cricketYes.length;
+    if(statDietary) statDietary.textContent = dietaryCount;
+    if(statDeclinedCount) statDeclinedCount.textContent = no.length;
+    if(statDeclinedLabel){
+      if(no.length === 0){
+        statDeclinedLabel.textContent = 'Declined';
+      } else {
+        var names = no.map(function(g){ return (g.first_name + ' ' + g.last_name).trim(); });
+        statDeclinedLabel.textContent = 'Declined (' + names.join(', ') + ')';
+      }
+    }
+  }
+
+  function ccSetSyncStatus(text){
+    var el = document.getElementById('ccSyncStatus');
+    if(el) el.textContent = text;
+  }
+
+  function ccApplyData(payload, isCache){
+    ccRenderOverviewStats(payload.guests || []);
+    var seatingGuests = ccBuildGuestList(payload.guests || []);
+    var cricketGuests = ccBuildGuestList(payload.guests || [], 'cricket_attendance');
+    if(window.CCTablePlanner) window.CCTablePlanner.init(seatingGuests, payload.seating || {});
+    if(window.CCCricketTeams) window.CCCricketTeams.init(cricketGuests, payload.cricket || {});
+    if(isCache){
+      ccSetSyncStatus('offline — showing last cached copy, changes here won’t save');
+    } else {
+      var t = new Date();
+      ccSetSyncStatus('live · synced ' + t.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}));
+    }
+  }
+
+  window.ccBoot = function(){
+    ccSetSyncStatus('connecting…');
+    ccApiGet().then(function(data){
+      try{ localStorage.setItem(CC_CACHE_KEY, JSON.stringify(data)); }catch(e){}
+      ccApplyData(data, false);
+    }).catch(function(err){
+      console.error('cc_boot_failed', err);
+      var cached = null;
+      try{ cached = JSON.parse(localStorage.getItem(CC_CACHE_KEY) || 'null'); }catch(e){}
+      if(cached){
+        ccApplyData(cached, true);
+      } else {
+        ccSetSyncStatus('connection failed — no cached copy available');
+      }
+    });
+  };
 </script>
 
 <script>
@@ -843,12 +981,12 @@
 <script>
 
   // ---------- Table planner ----------
-  (function(){
-    var GUESTS = [{"label":"Abby MacPherson","side":"Ed","dietary":null},{"label":"Alex Aughterson","side":"Ed","dietary":null},{"label":"Alex Macpherson","side":"Ed","dietary":null},{"label":"Ashlea McKee","side":"Ed","dietary":null},{"label":"Becca Stapleton","side":"Ed","dietary":null},{"label":"Ben Aughterson","side":"Ed","dietary":null},{"label":"Cameron Aughterson","side":"Ed","dietary":"Pescatarian"},{"label":"Catherine Critchley","side":"Ed","dietary":null},{"label":"Chloe Giles","side":"Ed","dietary":null},{"label":"Chris Murphy","side":"Ed","dietary":null},{"label":"Christopher de Souza","side":"Ed","dietary":"n/a"},{"label":"Dalya Kurer","side":"Ed","dietary":null},{"label":"Dave Biggs","side":"Ed","dietary":null},{"label":"David Mafullul","side":"Ed","dietary":null},{"label":"Ed Kirwan","side":"Ed","dietary":"None"},{"label":"Edward Stapleton","side":"Ed","dietary":null},{"label":"Elliot Greenwood","side":"Ed","dietary":"No"},{"label":"Emily Cleaton","side":"Ed","dietary":"No"},{"label":"Florian Coste","side":"Ed","dietary":null},{"label":"George Rendall","side":"Ed","dietary":"pine nut allergy (only an issue if eaten; all other nuts absolutely fine)"},{"label":"George Stapleton","side":"Ed","dietary":"N/a"},{"label":"Georgina Chamberlain","side":"Ed","dietary":null},{"label":"Grace Gleave","side":"Ed","dietary":"Pescatarian"},{"label":"Hannah Kirwan","side":"Ed","dietary":"None"},{"label":"Harry Wilson","side":"Ed","dietary":"Pescatarian."},{"label":"Isabel Aughterson","side":"Ed","dietary":null},{"label":"Isobel Fleming","side":"Ed","dietary":null},{"label":"Isobel Sherman","side":"Ed","dietary":null},{"label":"James Aughterson","side":"Ed","dietary":"Gluten Free"},{"label":"James Chamberlain","side":"Ed","dietary":null},{"label":"James Sherman","side":"Ed","dietary":"Allergic to Macca’s shit chat"},{"label":"James West","side":"Ed","dietary":"No"},{"label":"Jeremy Talbot","side":"Ed","dietary":"Allergy - lobster and crab"},{"label":"Jess Biggs","side":"Ed","dietary":null},{"label":"Lauriane Flais","side":"Ed","dietary":"Pescatarian"},{"label":"Liz Stapleton","side":"Ed","dietary":null},{"label":"Marcus Stapleton","side":"Ed","dietary":null},{"label":"Mark Stapleton","side":"Ed","dietary":null},{"label":"Matthew Houlden","side":"Ed","dietary":null},{"label":"Meaghan Coffey","side":"Ed","dietary":null},{"label":"Oliver Parsons","side":"Ed","dietary":null},{"label":"Oluwasayo Sogbesan","side":"Ed","dietary":null},{"label":"Peter Critchley","side":"Ed","dietary":null},{"label":"Polly Kilford","side":"Ed","dietary":"Light on dairy please (a bit fine)"},{"label":"Robin Irvine","side":"Ed","dietary":null},{"label":"Rosanna Talbot","side":"Ed","dietary":null},{"label":"Rupert Giles","side":"Ed","dietary":null},{"label":"Shruti Ayyar","side":"Ed","dietary":"Vegetarian"},{"label":"Sophie Kekwick","side":"Ed","dietary":"No"},{"label":"Stephi Stapleton Barnes","side":"Ed","dietary":null},{"label":"Tom Kilford","side":"Ed","dietary":null},{"label":"Tom Stevens","side":"Ed","dietary":"Nil"},{"label":"Adrian Linney","side":"Laura","dietary":"None"},{"label":"Alasdair McCrone","side":"Laura","dietary":null},{"label":"Alex Rattan","side":"Laura","dietary":null},{"label":"Amy Pavlis","side":"Laura","dietary":null},{"label":"Andrew Harford","side":"Laura","dietary":null},{"label":"Anna Cooke","side":"Laura","dietary":"Vegan plz :)"},{"label":"Baldo Tranchina","side":"Laura","dietary":"None"},{"label":"Brenda Harford","side":"Laura","dietary":null},{"label":"Calum Walker","side":"Laura","dietary":null},{"label":"Carlos Mandeville","side":"Laura","dietary":"Pescatarian"},{"label":"Chang-In Jung","side":"Laura","dietary":"allergic to abalone"},{"label":"Chloe Rosenthal","side":"Laura","dietary":null},{"label":"Christine Deacon","side":"Laura","dietary":null},{"label":"Ciarán Martin","side":"Laura","dietary":"No"},{"label":"Craig Ridley","side":"Laura","dietary":"No cheese"},{"label":"Daniel Harford","side":"Laura","dietary":null},{"label":"Deborah Hanson","side":"Laura","dietary":null},{"label":"Emily Phillips","side":"Laura","dietary":"Pescatarian"},{"label":"Fionan Walsh","side":"Laura","dietary":"Nope"},{"label":"Georgia Prendergast","side":"Laura","dietary":null},{"label":"Hannah Lear","side":"Laura","dietary":"Vegetarian x"},{"label":"Hugh Harding","side":"Laura","dietary":null},{"label":"Jack Barratt","side":"Laura","dietary":null},{"label":"James Bodger","side":"Laura","dietary":null},{"label":"James Harford","side":"Laura","dietary":null},{"label":"Jasmine Law","side":"Laura","dietary":"None"},{"label":"Jeremy Lee","side":"Laura","dietary":null},{"label":"Jess Findlay","side":"Laura","dietary":"1 x vegetarian"},{"label":"Joe Riley","side":"Laura","dietary":"No"},{"label":"Julie Howell","side":"Laura","dietary":"No"},{"label":"Kassie Bretherton","side":"Laura","dietary":null},{"label":"Kate Harford","side":"Laura","dietary":null},{"label":"Katie Armour","side":"Laura","dietary":"Gluten intolerant and incredibly sorry"},{"label":"Kaz Bridges","side":"Laura","dietary":null},{"label":"Kirsty Macintosh","side":"Laura","dietary":"No"},{"label":"Laura Harford","side":"Laura","dietary":"Vegetarian"},{"label":"Malcolm Harford","side":"Laura","dietary":null},{"label":"Martin McNulty","side":"Laura","dietary":"No"},{"label":"Maya Kadirgamar","side":"Laura","dietary":"Pescatarians"},{"label":"Megan Ridley","side":"Laura","dietary":"None"},{"label":"Molly Daly","side":"Laura","dietary":"NONE"},{"label":"Ned Smith","side":"Laura","dietary":"N/A"},{"label":"Nic Wells","side":"Laura","dietary":"N/A"},{"label":"Nicholas Mann","side":"Laura","dietary":null},{"label":"Nick Harford","side":"Laura","dietary":null},{"label":"Nina Selmer","side":"Laura","dietary":"Vegetarian"},{"label":"Peter Harford","side":"Laura","dietary":"Plenty of meat please"},{"label":"Philippa Nicholson","side":"Laura","dietary":null},{"label":"Rick Deacon","side":"Laura","dietary":null},{"label":"Sammy Lee","side":"Laura","dietary":null},{"label":"Scott Stacey","side":"Laura","dietary":"Nut allergy"},{"label":"Stephen Bridges","side":"Laura","dietary":null},{"label":"Stephen Tate","side":"Laura","dietary":null},{"label":"Thomas Wilson","side":"Laura","dietary":null},{"label":"Toni Walsh","side":"Laura","dietary":"Nope ... easy as pie"},{"label":"Tracy Harford-Li","side":"Laura","dietary":null},{"label":"Meg West","side":"Laura, Ed","dietary":null},{"label":"Tobi Owens","side":"Laura, Ed","dietary":null}];
-    var STORAGE_KEY = 'wedding-table-plan-v1';
-
+  window.CCTablePlanner = (function(){
+    var GUESTS = [];
     var guestByKey = {};
-    GUESTS.forEach(function(g){ guestByKey[g.label] = g; });
+    var seating = {};
+    var built = false;
+    var saveRemote = ccDebounce(function(){ ccApiPost('seating', seating); }, 700);
 
     function sideClass(side){
       if(side === 'Ed') return 'side-ed';
@@ -856,23 +994,9 @@
       return 'side-both';
     }
 
-    function loadSeating(){
-      try{
-        var raw = localStorage.getItem(STORAGE_KEY);
-        if(!raw) return {};
-        var parsed = JSON.parse(raw);
-        var clean = {};
-        Object.keys(parsed).forEach(function(seatId){
-          if(guestByKey[parsed[seatId]]) clean[seatId] = parsed[seatId];
-        });
-        return clean;
-      }catch(e){ return {}; }
-    }
-
-    var seating = loadSeating();
-
     function saveSeating(){
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(seating));
+      try{ localStorage.setItem('wedding-table-plan-v1', JSON.stringify(seating)); }catch(e){}
+      saveRemote();
     }
 
     function seatedGuestKeys(){
@@ -1030,14 +1154,6 @@
         unseated.forEach(function(g){ list.appendChild(makeChip(g)); });
       }
 
-      var poolEl = document.getElementById('poolList');
-      poolEl.addEventListener('dragover', function(e){ e.preventDefault(); });
-      poolEl.addEventListener('drop', function(e){
-        var guestKey = e.dataTransfer.getData('text/plain');
-        var fromSeat = e.dataTransfer.getData('application/x-seat-id');
-        if(fromSeat){ delete seating[fromSeat]; saveSeating(); renderAll(); }
-      });
-
       var count = Object.keys(seatedKeys).length;
       document.getElementById('planCount').textContent = count + ' / ' + GUESTS.length + ' seated';
     }
@@ -1047,27 +1163,50 @@
       renderPool();
     }
 
-    document.getElementById('planSearch').addEventListener('input', renderPool);
-    document.getElementById('planReset').addEventListener('click', function(){
-      seating = {};
-      saveSeating();
-      renderAll();
-    });
+    function wireOnce(){
+      if(built) return;
+      built = true;
+      buildVenue();
+      document.getElementById('planSearch').addEventListener('input', renderPool);
+      document.getElementById('planReset').addEventListener('click', function(){
+        seating = {};
+        saveSeating();
+        renderAll();
+      });
+      var poolEl = document.getElementById('poolList');
+      poolEl.addEventListener('dragover', function(e){ e.preventDefault(); });
+      poolEl.addEventListener('drop', function(e){
+        var fromSeat = e.dataTransfer.getData('application/x-seat-id');
+        if(fromSeat){ delete seating[fromSeat]; saveSeating(); renderAll(); }
+      });
+    }
 
-    buildVenue();
-    renderAll();
+    return {
+      init: function(guests, initialSeating){
+        GUESTS = guests || [];
+        guestByKey = {};
+        GUESTS.forEach(function(g){ guestByKey[g.label] = g; });
+        var clean = {};
+        Object.keys(initialSeating || {}).forEach(function(seatId){
+          if(guestByKey[initialSeating[seatId]]) clean[seatId] = initialSeating[seatId];
+        });
+        seating = clean;
+        wireOnce();
+        renderAll();
+      }
+    };
   })();
 
 </script>
 <script>
 
   // ---------- Cricket teams ----------
-  (function(){
-    var CRICKET_GUESTS = [{"label":"Abby MacPherson","side":"Ed"},{"label":"Alex Macpherson","side":"Ed"},{"label":"Becca Stapleton","side":"Ed"},{"label":"Chloe Giles","side":"Ed"},{"label":"Chris Murphy","side":"Ed"},{"label":"Christopher de Souza","side":"Ed"},{"label":"Dalya Kurer","side":"Ed"},{"label":"Dave Biggs","side":"Ed"},{"label":"Ed Kirwan","side":"Ed"},{"label":"Edward Stapleton","side":"Ed"},{"label":"Elliot Greenwood","side":"Ed"},{"label":"Emily Cleaton","side":"Ed"},{"label":"George Rendall","side":"Ed"},{"label":"George Stapleton","side":"Ed"},{"label":"Georgina Chamberlain","side":"Ed"},{"label":"Grace Gleave","side":"Ed"},{"label":"Hannah Kirwan","side":"Ed"},{"label":"Harry Wilson","side":"Ed"},{"label":"Isobel Sherman","side":"Ed"},{"label":"James Chamberlain","side":"Ed"},{"label":"James Sherman","side":"Ed"},{"label":"James West","side":"Ed"},{"label":"Jeremy Talbot","side":"Ed"},{"label":"Jess Biggs","side":"Ed"},{"label":"Liz Stapleton","side":"Ed"},{"label":"Marcus Stapleton","side":"Ed"},{"label":"Mark Stapleton","side":"Ed"},{"label":"Matthew Houlden","side":"Ed"},{"label":"Meaghan Coffey","side":"Ed"},{"label":"Oliver Parsons","side":"Ed"},{"label":"Oluwasayo Sogbesan","side":"Ed"},{"label":"Polly Kilford","side":"Ed"},{"label":"Rosanna Talbot","side":"Ed"},{"label":"Rupert Giles","side":"Ed"},{"label":"Shruti Ayyar","side":"Ed"},{"label":"Sophie Kekwick","side":"Ed"},{"label":"Stephi Stapleton Barnes","side":"Ed"},{"label":"Tom Kilford","side":"Ed"},{"label":"Tom Stevens","side":"Ed"},{"label":"Alex Rattan","side":"Laura"},{"label":"Amy Pavlis","side":"Laura"},{"label":"Andrew Harford","side":"Laura"},{"label":"Anna Cooke","side":"Laura"},{"label":"Baldo Tranchina","side":"Laura"},{"label":"Brenda Harford","side":"Laura"},{"label":"Calum Walker","side":"Laura"},{"label":"Carlos Mandeville","side":"Laura"},{"label":"Chang-In Jung","side":"Laura"},{"label":"Christine Deacon","side":"Laura"},{"label":"Craig Ridley","side":"Laura"},{"label":"Daniel Harford","side":"Laura"},{"label":"Deborah Hanson","side":"Laura"},{"label":"Fionan Walsh","side":"Laura"},{"label":"Georgia Prendergast","side":"Laura"},{"label":"James Harford","side":"Laura"},{"label":"Jasmine Law","side":"Laura"},{"label":"Jeremy Lee","side":"Laura"},{"label":"Jess Findlay","side":"Laura"},{"label":"Julie Howell","side":"Laura"},{"label":"Kate Harford","side":"Laura"},{"label":"Katie Armour","side":"Laura"},{"label":"Kaz Bridges","side":"Laura"},{"label":"Kirsty Macintosh","side":"Laura"},{"label":"Laura Harford","side":"Laura"},{"label":"Malcolm Harford","side":"Laura"},{"label":"Martin McNulty","side":"Laura"},{"label":"Maya Kadirgamar","side":"Laura"},{"label":"Megan Ridley","side":"Laura"},{"label":"Molly Daly","side":"Laura"},{"label":"Ned Smith","side":"Laura"},{"label":"Nic Wells","side":"Laura"},{"label":"Nicholas Mann","side":"Laura"},{"label":"Nick Harford","side":"Laura"},{"label":"Nina Selmer","side":"Laura"},{"label":"Peter Harford","side":"Laura"},{"label":"Rick Deacon","side":"Laura"},{"label":"Sammy Lee","side":"Laura"},{"label":"Scott Stacey","side":"Laura"},{"label":"Stephen Bridges","side":"Laura"},{"label":"Thomas Wilson","side":"Laura"},{"label":"Toni Walsh","side":"Laura"},{"label":"Tracy Harford-Li","side":"Laura"},{"label":"Meg West","side":"Laura, Ed"},{"label":"Tobi Owens","side":"Laura, Ed"}];
-    var STORAGE_KEY = 'wedding-cricket-teams-v1';
-
+  window.CCCricketTeams = (function(){
+    var CRICKET_GUESTS = [];
     var guestByLabel = {};
-    CRICKET_GUESTS.forEach(function(g){ guestByLabel[g.label] = g; });
+    var assignment = {};
+    var built = false;
+    var saveRemote = ccDebounce(function(){ ccApiPost('cricket', assignment); }, 700);
 
     function sideClass(side){
       if(side === 'Ed') return 'side-ed';
@@ -1075,25 +1214,9 @@
       return 'side-both';
     }
 
-    function loadAssignment(){
-      try{
-        var raw = localStorage.getItem(STORAGE_KEY);
-        if(!raw) return {};
-        var parsed = JSON.parse(raw);
-        var clean = {};
-        Object.keys(parsed).forEach(function(label){
-          if(guestByLabel[label] && (parsed[label] === 'england' || parsed[label] === 'australia')){
-            clean[label] = parsed[label];
-          }
-        });
-        return clean;
-      }catch(e){ return {}; }
-    }
-
-    var assignment = loadAssignment();
-
     function saveAssignment(){
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(assignment));
+      try{ localStorage.setItem('wedding-cricket-teams-v1', JSON.stringify(assignment)); }catch(e){}
+      saveRemote();
     }
 
     function makeChip(g, inTeam){
@@ -1176,30 +1299,47 @@
       });
     }
 
-    wireDropTarget(document.getElementById('teamEngland'), function(label){
-      assignment[label] = 'england';
-      saveAssignment();
-      renderAll();
-    });
-    wireDropTarget(document.getElementById('teamAustralia'), function(label){
-      assignment[label] = 'australia';
-      saveAssignment();
-      renderAll();
-    });
-    wireDropTarget(document.getElementById('cricketPoolList'), function(label){
-      delete assignment[label];
-      saveAssignment();
-      renderAll();
-    });
+    function wireOnce(){
+      if(built) return;
+      built = true;
+      wireDropTarget(document.getElementById('teamEngland'), function(label){
+        assignment[label] = 'england';
+        saveAssignment();
+        renderAll();
+      });
+      wireDropTarget(document.getElementById('teamAustralia'), function(label){
+        assignment[label] = 'australia';
+        saveAssignment();
+        renderAll();
+      });
+      wireDropTarget(document.getElementById('cricketPoolList'), function(label){
+        delete assignment[label];
+        saveAssignment();
+        renderAll();
+      });
+      document.getElementById('cricketSearch').addEventListener('input', renderPool);
+      document.getElementById('cricketReset').addEventListener('click', function(){
+        assignment = {};
+        saveAssignment();
+        renderAll();
+      });
+    }
 
-    document.getElementById('cricketSearch').addEventListener('input', renderPool);
-    document.getElementById('cricketReset').addEventListener('click', function(){
-      assignment = {};
-      saveAssignment();
-      renderAll();
-    });
-
-    renderAll();
+    return {
+      init: function(guests, initialAssignment){
+        CRICKET_GUESTS = guests || [];
+        guestByLabel = {};
+        CRICKET_GUESTS.forEach(function(g){ guestByLabel[g.label] = g; });
+        var clean = {};
+        Object.keys(initialAssignment || {}).forEach(function(label){
+          var v = initialAssignment[label];
+          if(guestByLabel[label] && (v === 'england' || v === 'australia')) clean[label] = v;
+        });
+        assignment = clean;
+        wireOnce();
+        renderAll();
+      }
+    };
   })();
 
 </script>
