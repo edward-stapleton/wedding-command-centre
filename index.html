@@ -1,0 +1,1208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ed &amp; Laura — Wedding Command Centre</title>
+<style>
+  :root{
+    --paper:#F1EEE3;
+    --paper-raised:#FAF8F0;
+    --ink:#242820;
+    --ink-soft:#5B5F52;
+    --accent:#3E6144;
+    --accent-dark:#2C4732;
+    --accent-soft:#E1E8DA;
+    --brick:#A64B2A;
+    --brick-soft:#F3DFD4;
+    --gold:#AD8A2E;
+    --gold-soft:#F1E7CB;
+    --laura:#7A4B6B;
+    --laura-soft:#EDE1E8;
+    --line:#D8D2BE;
+    --line-strong:#C3BCA3;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:15px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{font-family:var(--serif);font-weight:400;text-wrap:balance;color:var(--ink);margin:0;}
+  a{color:var(--accent-dark);}
+  ::selection{background:var(--accent-soft);}
+  button:focus-visible, a:focus-visible{outline:2px solid var(--accent-dark);outline-offset:2px;}
+
+  /* ---------- Masthead ---------- */
+  .masthead{
+    position:sticky;top:0;z-index:50;
+    background:rgba(241,238,227,0.94);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  .masthead-inner{
+    max-width:1180px;margin:0 auto;padding:14px 28px;
+    display:flex;align-items:center;gap:28px;flex-wrap:wrap;
+  }
+  .brand{display:flex;flex-direction:column;gap:1px;flex:0 0 auto;}
+  .brand-title{font-family:var(--serif);font-size:1.5rem;letter-spacing:0.02em;}
+  .brand-sub{font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-soft);}
+  .nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap;}
+  .nav button{
+    font-family:var(--sans);font-size:0.82rem;font-weight:600;
+    background:none;border:1px solid transparent;color:var(--ink-soft);
+    padding:7px 13px;border-radius:7px;cursor:pointer;transition:all .15s ease;
+  }
+  .nav button:hover{color:var(--ink);background:var(--accent-soft);}
+  .nav button.active{color:var(--paper-raised);background:var(--accent);}
+  .countdown-chip{
+    font-family:var(--mono);font-variant-numeric:tabular-nums;
+    background:var(--accent);color:var(--paper-raised);
+    padding:6px 12px;border-radius:20px;font-size:0.78rem;font-weight:600;
+    white-space:nowrap;
+  }
+
+  main{max-width:1180px;margin:0 auto;padding:36px 28px 100px;}
+  section{scroll-margin-top:76px;margin-bottom:64px;}
+  .section-head{display:flex;align-items:baseline;gap:14px;margin-bottom:22px;flex-wrap:wrap;}
+  .section-head h2{font-size:1.9rem;}
+  .section-tag{font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-soft);border-left:2px solid var(--line-strong);padding-left:10px;}
+  .lede{color:var(--ink-soft);max-width:64ch;margin:6px 0 24px;}
+
+  /* ---------- Overview stat tiles ---------- */
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:28px;}
+  .stat{
+    background:var(--paper-raised);border:1px solid var(--line);border-radius:10px;
+    padding:16px 18px;display:flex;flex-direction:column;gap:4px;
+  }
+  .stat .n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:1.9rem;font-weight:600;color:var(--accent-dark);}
+  .stat .l{font-size:0.74rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-soft);}
+  .stat.warn .n{color:var(--brick);}
+
+  .deadline-strip{
+    display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;
+  }
+  .deadline-card{
+    flex:0 0 auto;min-width:168px;background:var(--paper-raised);border:1px solid var(--line);
+    border-left:4px solid var(--brick);border-radius:8px;padding:12px 14px;
+  }
+  .deadline-card .date{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700;color:var(--brick);font-size:0.82rem;}
+  .deadline-card .what{font-size:0.86rem;margin-top:3px;}
+  .deadline-card .amt{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:0.78rem;color:var(--ink-soft);margin-top:3px;}
+
+  .venue-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;}
+  .venue-card{background:var(--paper-raised);border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
+  .venue-card h4{font-size:1.05rem;margin-bottom:4px;}
+  .venue-card p{margin:0;color:var(--ink-soft);font-size:0.86rem;}
+
+  /* ---------- pills ---------- */
+  .pill{display:inline-block;font-size:0.68rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;
+    padding:2px 9px;border-radius:20px;white-space:nowrap;}
+  .pill-high{background:var(--brick-soft);color:var(--brick);}
+  .pill-med{background:var(--gold-soft);color:var(--gold);}
+  .pill-low{background:var(--accent-soft);color:var(--accent-dark);}
+  .pill-done{background:var(--accent);color:var(--paper-raised);}
+  .pill-progress{background:var(--gold);color:var(--paper-raised);}
+  .pill-open{background:var(--brick);color:var(--paper-raised);}
+
+  /* ---------- To-do ---------- */
+  .todo-cat{background:var(--paper-raised);border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden;}
+  .todo-cat-head{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .todo-cat-head h3{font-size:1.15rem;margin-right:auto;}
+  .todo-body{padding:14px 18px 16px;}
+  .todo-body ul{margin:0;padding-left:18px;}
+  .todo-body li{margin-bottom:7px;}
+  .todo-body li:last-child{margin-bottom:0;}
+  .flag{color:var(--brick);font-weight:700;}
+
+  /* ---------- Table planner (interactive) ---------- */
+  .plan-note{background:var(--accent-soft);border:1px solid var(--line);border-radius:10px;padding:12px 16px;font-size:0.86rem;color:var(--accent-dark);margin-bottom:20px;}
+  .plan-toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px;}
+  .plan-search{flex:1 1 220px;font:inherit;font-size:0.86rem;padding:8px 12px;border:1px solid var(--line-strong);border-radius:8px;background:var(--paper-raised);color:var(--ink);}
+  .plan-search:focus-visible{outline:2px solid var(--accent-dark);outline-offset:1px;}
+  .plan-legend{display:flex;gap:14px;font-size:0.78rem;color:var(--ink-soft);flex-wrap:wrap;}
+  .plan-legend .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px;}
+  .plan-count{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:0.8rem;color:var(--ink-soft);white-space:nowrap;}
+  .plan-reset{font:inherit;font-size:0.78rem;font-weight:600;color:var(--ink-soft);background:var(--paper-raised);border:1px solid var(--line-strong);border-radius:7px;padding:6px 12px;cursor:pointer;}
+  .plan-reset:hover{color:var(--brick);border-color:var(--brick);}
+
+  .plan-layout{display:flex;flex-direction:column;gap:18px;}
+
+  .plan-pool{background:var(--paper-raised);border:1px solid var(--line);border-radius:12px;padding:14px;}
+  .plan-pool h4{font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-soft);font-family:var(--sans);font-weight:700;margin-bottom:10px;}
+  .pool-list{display:flex;flex-direction:row;flex-wrap:wrap;gap:6px;min-height:40px;max-height:190px;overflow-y:auto;padding-right:2px;}
+  .pool-empty{font-size:0.8rem;color:var(--ink-soft);font-style:italic;padding:10px 4px;}
+
+  .chip{
+    display:flex;align-items:center;gap:7px;
+    background:var(--paper);border:1px solid var(--line-strong);border-radius:7px;
+    padding:6px 10px;font-size:0.82rem;cursor:grab;user-select:none;
+    border-left:4px solid var(--ink-soft);transition:box-shadow .12s ease, transform .12s ease;
+  }
+  .chip:active{cursor:grabbing;}
+  .chip.dragging{opacity:0.4;}
+  .chip:hover{box-shadow:0 2px 6px rgba(36,40,32,0.12);}
+  .chip.side-ed{border-left-color:var(--accent);}
+  .chip.side-laura{border-left-color:var(--laura);}
+  .chip.side-both{border-left-image:linear-gradient(var(--accent),var(--laura)) 1;}
+  .chip .diet-mark{margin-left:auto;color:var(--gold);font-weight:700;font-size:0.9rem;}
+
+  .venue{
+    background:var(--paper-raised);border:1px solid var(--line);border-radius:14px;
+    padding:20px;overflow-x:auto;
+  }
+  .venue-label{
+    font-size:0.68rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft);
+    border-bottom:1px dashed var(--line-strong);padding-bottom:10px;margin-bottom:16px;white-space:nowrap;
+  }
+  .venue-inner{display:flex;flex-direction:column;align-items:center;gap:20px;width:max-content;margin:0 auto;}
+
+  .top-table-block{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .top-table-title{font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;}
+  .top-table-rig{display:flex;flex-direction:column;gap:0;width:max-content;}
+  .tt-row{display:flex;gap:4px;}
+  .tt-surface{height:10px;margin:8px 0;background:linear-gradient(90deg,var(--line-strong),var(--line-strong)) center/100% 2px no-repeat, var(--paper);border-radius:4px;}
+
+  .long-tables-row{display:flex;flex-direction:row;gap:14px;align-items:flex-start;}
+  .long-table-block{display:flex;flex-direction:column;align-items:center;}
+  .long-table-title{display:flex;flex-direction:column;align-items:center;gap:4px;margin-bottom:6px;}
+  .long-table-title h4{font-size:0.86rem;}
+  .long-table-title .count{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:0.7rem;color:var(--ink-soft);background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:2px 8px;}
+  .long-table-rig{display:flex;flex-direction:row;gap:3px;width:max-content;}
+  .lt-col{display:flex;flex-direction:column;gap:3px;}
+  .lt-surface{width:9px;margin:0 1px;background:linear-gradient(var(--line-strong),var(--line-strong)) center/2px 100% no-repeat;border-radius:4px;}
+
+  .seat{
+    width:88px;height:36px;flex:0 0 auto;
+    border:1.5px dashed var(--line-strong);border-radius:7px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:0.56rem;text-align:center;line-height:1.08;color:var(--ink-soft);
+    background:var(--paper);padding:2px 4px;position:relative;transition:background .12s ease,border-color .12s ease;
+    overflow:hidden;
+  }
+  .seat.drag-over{border-color:var(--accent-dark);background:var(--accent-soft);}
+  .seat.filled{border-style:solid;cursor:grab;color:#fff;font-weight:600;border-color:transparent;}
+  .seat.filled.side-ed{background:var(--accent);}
+  .seat.filled.side-laura{background:var(--laura);}
+  .seat.filled.side-both{background:linear-gradient(135deg,var(--accent) 50%,var(--laura) 50%);}
+  .seat .unseat{
+    position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;
+    background:var(--ink);color:#fff;font-size:0.6rem;line-height:16px;text-align:center;
+    cursor:pointer;opacity:0;transition:opacity .12s ease;
+  }
+  .seat.filled:hover .unseat{opacity:1;}
+
+  /* ---------- Cricket teams ---------- */
+  .cricket-teams{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media (max-width:700px){ .cricket-teams{grid-template-columns:1fr;} }
+  .team-panel{background:var(--paper-raised);border:1px solid var(--line);border-radius:12px;padding:16px;min-height:170px;transition:background .12s ease,border-color .12s ease;}
+  .team-panel.drag-over{border-color:var(--accent-dark);background:var(--accent-soft);}
+  .team-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;}
+  .team-head h4{font-size:1.05rem;}
+  .team-head .count{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:0.76rem;color:var(--ink-soft);background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:2px 9px;white-space:nowrap;}
+  .team-list{display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px;min-height:44px;}
+  .team-empty{font-size:0.8rem;color:var(--ink-soft);font-style:italic;padding:6px 2px;}
+  .chip .remove{margin-left:auto;color:var(--ink-soft);cursor:pointer;font-weight:700;padding-left:4px;}
+  .chip .remove:hover{color:var(--brick);}
+
+  /* ---------- Schedule ---------- */
+  .sched-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:0.78rem;color:var(--ink-soft);margin-bottom:14px;}
+  .sched-legend .flag{margin-right:4px;}
+  .sched-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--paper-raised);}
+  table.sched{border-collapse:collapse;width:100%;min-width:980px;font-size:0.83rem;}
+  table.sched th{
+    position:sticky;top:0;background:var(--accent);color:#fff;text-align:left;
+    font-size:0.68rem;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;
+    padding:9px 12px;white-space:nowrap;
+  }
+  table.sched td{padding:7px 12px;border-top:1px solid var(--line);vertical-align:top;}
+  table.sched td.time{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent-dark);white-space:nowrap;}
+  table.sched tr.divider td{
+    background:var(--ink);color:var(--paper);font-family:var(--sans);font-weight:700;
+    font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;padding:8px 12px;
+  }
+  table.sched tr:hover td{background:var(--accent-soft);}
+  table.sched tr.divider:hover td{background:var(--ink);}
+
+  /* ---------- Who's who ---------- */
+  .who-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:24px;}
+  .who-card{background:var(--paper-raised);border:1px solid var(--line);border-radius:10px;padding:14px 16px;}
+  .who-card h4{font-size:0.98rem;margin-bottom:2px;}
+  .who-card .role{font-size:0.68rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--accent-dark);font-weight:700;}
+  .who-card p{margin:6px 0 0;font-size:0.83rem;color:var(--ink-soft);}
+  .subhead{font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-soft);margin:32px 0 14px;border-top:1px solid var(--line);padding-top:24px;}
+  table.diet{border-collapse:collapse;width:100%;font-size:0.85rem;}
+  table.diet th{text-align:left;font-size:0.7rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-soft);padding:6px 10px;border-bottom:2px solid var(--line-strong);}
+  table.diet td{padding:6px 10px;border-bottom:1px solid var(--line);}
+  table.diet tr:nth-child(even){background:var(--paper);}
+
+  footer{max-width:1180px;margin:0 auto;padding:20px 28px 60px;color:var(--ink-soft);font-size:0.78rem;border-top:1px solid var(--line);}
+
+  @media (max-width:640px){
+    .masthead-inner{gap:10px;}
+    .nav{width:100%;order:3;}
+    main{padding:24px 16px 80px;}
+  }
+
+  /* ---------- Login gate ---------- */
+  #authGate{
+    position:fixed;inset:0;z-index:1000;
+    background:var(--paper);
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;
+  }
+  #authGate.hidden{display:none;}
+  .gate-card{
+    background:var(--paper-raised);border:1px solid var(--line);border-radius:14px;
+    padding:36px 32px;width:100%;max-width:340px;
+  }
+  .gate-card h1{font-size:1.5rem;margin-bottom:4px;}
+  .gate-card .gate-sub{font-size:0.8rem;color:var(--ink-soft);margin-bottom:22px;}
+  .gate-field{margin-bottom:14px;}
+  .gate-field label{display:block;font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:5px;}
+  .gate-field input{
+    width:100%;font:inherit;font-size:0.92rem;padding:9px 12px;
+    border:1px solid var(--line-strong);border-radius:8px;background:var(--paper);color:var(--ink);
+  }
+  .gate-field input:focus-visible{outline:2px solid var(--accent-dark);outline-offset:1px;}
+  .gate-submit{
+    width:100%;font:inherit;font-size:0.9rem;font-weight:600;
+    background:var(--accent);color:var(--paper-raised);border:none;border-radius:8px;
+    padding:10px 12px;cursor:pointer;margin-top:6px;
+  }
+  .gate-submit:hover{background:var(--accent-dark);}
+  .gate-error{color:var(--brick);font-size:0.82rem;margin-top:10px;min-height:1.2em;}
+  #appContent.hidden{display:none;}
+</style>
+</head>
+<body>
+
+<div id="authGate">
+  <div class="gate-card">
+    <h1>Ed &amp; Laura</h1>
+    <div class="gate-sub">Wedding Command Centre — sign in</div>
+    <form id="gateForm" autocomplete="on">
+      <div class="gate-field">
+        <label for="gateEmail">Email</label>
+        <input type="email" id="gateEmail" autocomplete="username" required>
+      </div>
+      <div class="gate-field">
+        <label for="gatePassword">Password</label>
+        <input type="password" id="gatePassword" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="gate-submit">Sign in</button>
+      <div class="gate-error" id="gateError"></div>
+    </form>
+  </div>
+</div>
+
+<div id="appContent" class="hidden">
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="brand">
+      <div class="brand-title">Ed &amp; Laura</div>
+      <div class="brand-sub">Wedding Command Centre · 22 Aug 2026 · Oxford</div>
+    </div>
+    <span class="countdown-chip" id="countdown">—</span>
+    <nav class="nav" id="nav">
+      <button data-target="overview">Overview</button>
+      <button data-target="todo">To-Do</button>
+      <button data-target="tables">Table Plan</button>
+      <button data-target="cricket">Cricket</button>
+      <button data-target="schedule">Day Schedule</button>
+      <button data-target="who">Who's Who</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ================= OVERVIEW ================= -->
+<section id="overview">
+  <div class="section-head">
+    <h2>Overview</h2>
+    <span class="section-tag">Saturday 22 August 2026 · Oxford</span>
+  </div>
+  <p class="lede">St Margaret's Church at 13:00, followed by the reception at The Medley Walled Garden. Built from the live Wedding Planner spreadsheet, the Supabase RSVP export, and the Life Summary files — last pulled 4 July 2026.</p>
+
+  <div class="stat-grid">
+    <div class="stat"><span class="n">112</span><span class="l">Guests confirmed yes</span></div>
+    <div class="stat warn"><span class="n">3</span><span class="l">Declined (Georgia Grant, Jules Stapleton&nbsp;Barnes, Victoria&nbsp;Stapleton)</span></div>
+    <div class="stat"><span class="n">86</span><span class="l">Coming to Friday cricket</span></div>
+    <div class="stat"><span class="n">£41,315</span><span class="l">Total budget (est.)</span></div>
+    <div class="stat warn"><span class="n">£13,635</span><span class="l">Still to pay across July–Aug</span></div>
+    <div class="stat"><span class="n">45</span><span class="l">Dietary/allergy notes on file</span></div>
+  </div>
+
+  <div class="section-tag" style="margin-bottom:12px;display:block;">Next six weeks — payment &amp; planning deadlines</div>
+  <div class="deadline-strip">
+    <div class="deadline-card"><div class="date">Sun 19 Jul</div><div class="what">Balliol venue visit (15:00) + final banns reading, St Margaret's</div></div>
+    <div class="deadline-card"><div class="date">Mon 20 Jul</div><div class="what">Dove House Farm balance due</div><div class="amt">£3,750</div></div>
+    <div class="deadline-card"><div class="date">Wed 22 Jul</div><div class="what">The Graces Photography balance due</div><div class="amt">£2,240</div></div>
+    <div class="deadline-card"><div class="date">Fri 24 Jul</div><div class="what">Medley Walled Garden balance due</div><div class="amt">£3,720</div></div>
+    <div class="deadline-card"><div class="date">Fri 24 Jul</div><div class="what">TMD Music (band) balance due</div><div class="amt">£3,120</div></div>
+    <div class="deadline-card"><div class="date">Fri 31 Jul</div><div class="what">Final planning call with Daniel Walters, 5pm UK</div></div>
+    <div class="deadline-card"><div class="date">Wed 5 Aug</div><div class="what">92 Kingston Road, payment 2 of 2</div><div class="amt">£805</div></div>
+    <div class="deadline-card"><div class="date">Sat 8 Aug</div><div class="what">Hair &amp; Makeup (Bridal by Charley) balance due</div><div class="amt">£1,327</div></div>
+  </div>
+
+  <div class="venue-grid" style="margin-top:24px;">
+    <div class="venue-card">
+      <h4>Ceremony</h4>
+      <p>St Margaret's Church, St Margaret's Road, Oxford OX2 6RX · 13:00 · Vicar Daniel Walters · Organist Richard Goodall</p>
+    </div>
+    <div class="venue-card">
+      <h4>Reception</h4>
+      <p>The Medley Walled Garden, Medley Manor Farm, Oxford OX2 0NJ · from 14:30 · Contact Chloe Gee</p>
+    </div>
+    <div class="venue-card">
+      <h4>Friday cricket</h4>
+      <p>Balliol College, Master's Field, Jowett Walk, Oxford OX1 3TL · from 14:30, play at 15:30</p>
+    </div>
+    <div class="venue-card">
+      <h4>Catering</h4>
+      <p>Shakespeare Kitchen (Ian Jobbins) · Ottolenghi-style sharing menu, sirloin on the Trailblazer BBQ · £8,571.24 for 120</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TO-DO ================= -->
+<section id="todo">
+  <div class="section-head">
+    <h2>To-Do List</h2>
+    <span class="section-tag">Merged from Status &amp; Actions + every open thread in the wedding file</span>
+  </div>
+  <p class="lede">Each item below is cross-checked against the latest emails and bookings, so a few status lines have moved on from what's written in the spreadsheet itself. Items in <span class="flag">red</span> are genuinely open questions with no answer on file yet.</p>
+
+  <div class="todo-cat">
+    <div class="todo-cat-head"><h3>Church &amp; ceremony</h3><span class="pill pill-high">High priority</span><span class="pill pill-progress">In progress</span></div>
+    <div class="todo-body"><ul>
+      <li>Draft and print the order of service — readers (Rebecca Green, Elliot Greenwood), bible reading (Toni Walsh) and witnesses (Meg West, James West) are all confirmed; the booklet itself isn't made yet.</li>
+      <li>Finalise the three hymns (opening / mid-service / closing) with Richard Goodall.</li>
+      <li>Banns: third and final reading at St Margaret's is <strong>Sunday 19 July</strong>. After it, Zorah Baig at All Saints West Dulwich will email the banns certificate — forward it on to Daniel Walters.</li>
+      <li>Final planning call with Daniel Walters is booked: <strong>Friday 31 July, 5pm UK</strong> (by call).</li>
+    </ul></div>
+  </div>
+
+  <div class="todo-cat">
+    <div class="todo-cat-head"><h3>Catering</h3><span class="pill pill-high">High priority</span><span class="pill pill-done">Contract confirmed</span></div>
+    <div class="todo-body"><ul>
+      <li>Menu and contract with Shakespeare Kitchen are locked (£8,571.24, 120 guests, confirmed 30 June).</li>
+      <li>Still open: tea/coffee service, and table linens — venue only supplies paper napkins, so Ed &amp; Laura are sourcing tablecloths themselves.</li>
+      <li><span class="flag">The dietary list sent to Ian Jobbins is out of date.</span> The live RSVP export has ~20 dietary notes on file (see Who's Who → Dietary requirements), well beyond the five originally flagged — send Ian the full current list.</li>
+      <li>Send the finished table plan to Ian once it's signed off (still outstanding since the 15 June meeting).</li>
+    </ul></div>
+  </div>
+
+  <div class="todo-cat">
+    <div class="todo-cat-head"><h3>Venue &amp; drinks</h3><span class="pill pill-med">Medium priority</span><span class="pill pill-progress">In progress</span></div>
+    <div class="todo-body"><ul>
+      <li>Confirm the keg coupler type with Chloe Gee so she can check whether The Medley has one, or source a non-standard one.</li>
+      <li>Bring the "Starford Lager" tap badge (and any other beer badges) to the venue.</li>
+      <li>Confirm how many of each cocktail are wanted for the one-hour cocktail service.</li>
+      <li>Venue balance of £3,720 due 24 July.</li>
+    </ul></div>
+  </div>
+
+  <div class="todo-cat">
+    <div class="todo-cat-head"><h3>Band &amp; music</h3><span class="pill pill-med">Medium priority</span><span class="pill pill-progress">In progress</span></div>
+    <div class="todo-body"><ul>
+      <li>Truly Medley Deeply balance of £3,120 due 24 July.</li>
+      <li><span class="flag">The draft day schedule lists the first dance twice</span> — once to DJ music at 19:15, and again as "Band – First Dance &amp; First Set" around 20:00. Decide which is real and tell both the DJ and the band.</li>
+    </ul></div>
+  </div>
+
+  <div class="todo-cat">
+    <div class="todo-cat-head"><h3>Photography &amp; video</h3><span class="pill pill-med">Medium priority</span><span class="pill pill-done">Booked</span></div>
+    <div class="todo-body"><ul>
+      <li>The Graces Photography balance of £2,240 due 22 July.</li>
+      <li>Ed Kirwan is down as videographer — sort a camcorder / equipment plan with him.</li>
+      <li><span class="flag">No dedicated group-photo slot appears in the schedule</span> between the ceremony ending (13:45) and the walk to the reception (14:00) — worth confirming with The Graces where photos actually happen.</li>
+    </ul></div>
+  </div>
+
+  <div class="todo-cat">
+    <div class="todo-cat-head"><h3>Rings</h3><span class="pill pill-med">Medium priority</span><span class="pill pill-progress">In progress</span></div>
+    <div class="todo-body"><ul>
+      <li>Ed's ring (77 Diamonds, 4mm platinum court) is dispatching 14 July, arriving ~15 July at Peabody Cottages. Nothing more to do.</li>
+      <li><span class="flag">Laura's ring order is "with the workshop" at Queensmith (confirmed 2 July) but the exact option was never confirmed in writing</span> — plain twist band (£1,110) vs diamond scallop band (£1,440). Worth a quick double-check with Laura.</li>
+    </ul></div>
+  </div>
+
+  <div class="todo-cat">
+    <div class="todo-cat-head"><h3>Suits &amp; outfits</h3><span class="pill pill-med">Medium priority</span><span class="pill pill-progress">In progress</span></div>
+    <div class="todo-body"><ul>
+      <li>Groomsmen morning-suit hire (Moss Bros, regular-fit tails, sky-blue double-breasted waistcoat) enquiry sent 1 July for the 8-person party — Ed, George Stapleton, Mark Stapleton, Chris Murphy, Tom Kilford, Harry Wilson, Tom Stevens, George Rendall. Awaiting Moss Bros' quote and an in-store measuring visit. Order needs to be ready to collect 4 days before the wedding.</li>
+      <li>Ed's own suit is still undecided between three trialled options: Percival (personal shopping, 3 June), Moss Bros Broadgate (styling appointment, 10 June), and SELECTED (multiple sizes ordered and delivered 24 June to compare fit).</li>
+      <li>Laura's dress is done — still need to buy the veil and shoes.</li>
+      <li>Flower-girl dresses and Theo's outfit are not yet sorted.</li>
+    </ul></div>
+  </div>
+
+  <div class="todo-cat">
+    <div class="todo-cat-head"><h3>Flowers</h3><span class="pill pill-med">Medium priority</span><span class="pill pill-progress">Decision pending</span></div>
+    <div class="todo-body"><ul>
+      <li>Still choosing between Caroline (friend, lower cost) and Sara Jakeman at Bloomin' Chic (professional — full quotation received and acknowledged 1 June, but no final decision recorded since).</li>
+      <li>Once confirmed: 1 bridal bouquet, 5 bridesmaid bouquets (repurposed as table décor), 9 buttonholes, bud vases for the tables, and 2 entrance urns moved from the church to the Medley after the ceremony.</li>
+    </ul></div>
+  </div>
+
+  <div class="todo-cat">
+    <div class="todo-cat-head"><h3>Friday cricket day</h3><span class="pill pill-high">High priority</span><span class="pill pill-progress">In progress</span></div>
+    <div class="todo-body"><ul>
+      <li>Food &amp; drink for the cricket day is still unresolved (£500 estimated, nothing booked yet).</li>
+      <li>Balliol venue visit is 19 July at 15:00 — same day as the final banns reading, so the two need juggling on the day.</li>
+      <li>RNG Classics car hire: enquiry sent, cars confirmed available 21 August — still need to pick a specific car and confirm the day's plan with Robbie Gillison.</li>
+      <li>86 of 112 confirmed guests are down for cricket — a team sheet is still open ("anyone interested should get in touch").</li>
+    </ul></div>
+  </div>
+
+  <div class="todo-cat">
+    <div class="todo-cat-head"><h3>Seating &amp; stationery</h3><span class="pill pill-low">Low priority</span><span class="pill pill-progress">In progress</span></div>
+    <div class="todo-body"><ul>
+      <li>Two draft table plans exist (see Table Planner) — needs final sign-off, then goes to Ian Jobbins.</li>
+      <li><span class="flag">The top table itself has two different draft layouts</span> — still deciding between them (see Table Planner).</li>
+      <li>Stationery — table plan chart, welcome sign, menus, name cards — not yet started.</li>
+      <li>Table setting — order tablecloths and candles from Jess.</li>
+    </ul></div>
+  </div>
+
+  <div class="todo-cat">
+    <div class="todo-cat-head"><h3>Accommodation</h3><span class="pill pill-high">High priority</span><span class="pill pill-done">Mostly booked</span></div>
+    <div class="todo-body"><ul>
+      <li>Cotswold Lodge Hotel: Feature Room confirmed for Ed, 20–23 August.</li>
+      <li>Dove House Farm (bridal party, Thursday–Sunday): balance of £3,750 due 20 July.</li>
+      <li>92 Kingston Road: payment 2 of 2 (£805) due 5 August.</li>
+      <li>Groomsmen's flat in Oxford, Friday &amp; Saturday nights — Ed joining them Friday night.</li>
+      <li>Kellogg College enquiry (Aug 2025) was never confirmed — safe to let lapse unless still needed.</li>
+    </ul></div>
+  </div>
+
+  <div class="todo-cat">
+    <div class="todo-cat-head"><h3>Hair &amp; makeup</h3><span class="pill pill-med">Medium priority</span><span class="pill pill-done">Booked</span></div>
+    <div class="todo-body"><ul>
+      <li>Bridal by Charley — deposit paid, balance of £1,327 due 8 August.</li>
+    </ul></div>
+  </div>
+
+  <div class="todo-cat">
+    <div class="todo-cat-head"><h3>Cake</h3><span class="pill pill-low">Low priority</span><span class="pill pill-open">Not started</span></div>
+    <div class="todo-body"><ul>
+      <li><span class="flag">No supplier, flavour or design chosen yet</span> — the one item on the whole list with genuinely nothing decided.</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- ================= TABLE PLAN ================= -->
+<section id="tables">
+  <div class="section-head">
+    <h2>Table Planner</h2>
+    <span class="section-tag">Interactive · marquee layout · live RSVP pool</span>
+  </div>
+  <div class="plan-note">Drag a guest from the pool onto any seat. The top table sits across the head of the marquee, perpendicular to the room, with seven seats a side (14 total); the four long tables run away from it down the length of the tent, up to 30 seats each (two sides of 15). Drag a seated guest back onto the pool — or use the × that appears on hover — to unseat them. Your layout saves automatically in this browser.</div>
+
+  <div class="plan-toolbar">
+    <input type="text" class="plan-search" id="planSearch" placeholder="Search unseated guests…" autocomplete="off">
+    <span class="plan-legend">
+      <span><span class="dot" style="background:var(--accent)"></span>Ed's</span>
+      <span><span class="dot" style="background:var(--laura)"></span>Laura's</span>
+      <span><span class="dot" style="background:linear-gradient(135deg,var(--accent) 50%,var(--laura) 50%)"></span>Both</span>
+      <span><span class="gold" style="color:var(--gold);font-weight:700;">*</span> dietary note on file</span>
+    </span>
+    <span class="plan-count" id="planCount">— seated</span>
+    <button class="plan-reset" id="planReset" type="button">Reset layout</button>
+  </div>
+
+  <div class="plan-layout">
+    <aside class="plan-pool">
+      <h4>Unseated guests</h4>
+      <div class="pool-list" id="poolList"></div>
+    </aside>
+
+    <div class="venue" id="venue">
+      <div class="venue-label">Marquee — top table across the head, long tables running away from it</div>
+      <div class="venue-inner">
+        <div class="top-table-block">
+          <div class="top-table-title">Top table · 14 seats</div>
+          <div class="top-table-rig" id="topTableRig"></div>
+        </div>
+        <div class="long-tables-row" id="longTables"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================= CRICKET ================= -->
+<section id="cricket">
+  <div class="section-head">
+    <h2>Cricket Teams</h2>
+    <span class="section-tag">Friday 21 Aug · Balliol College · England vs Australia &amp; Friends</span>
+  </div>
+  <div class="plan-note">Only guests who've RSVP'd yes to both the wedding and the Friday cricket day are eligible — drag names from the pool onto a team. Drag a player back onto the pool, or use the × on their chip, to unassign them. Saves automatically in this browser.</div>
+
+  <div class="plan-toolbar">
+    <input type="text" class="plan-search" id="cricketSearch" placeholder="Search unassigned players…" autocomplete="off">
+    <span class="plan-legend">
+      <span><span class="dot" style="background:var(--accent)"></span>Ed's</span>
+      <span><span class="dot" style="background:var(--laura)"></span>Laura's</span>
+      <span><span class="dot" style="background:linear-gradient(135deg,var(--accent) 50%,var(--laura) 50%)"></span>Both</span>
+    </span>
+    <span class="plan-count" id="cricketCount">— assigned</span>
+    <button class="plan-reset" id="cricketReset" type="button">Reset teams</button>
+  </div>
+
+  <div class="plan-pool" style="margin-bottom:18px;">
+    <h4>Unassigned players</h4>
+    <div class="pool-list" id="cricketPoolList"></div>
+  </div>
+
+  <div class="cricket-teams">
+    <div class="team-panel" id="teamEngland" data-team="england">
+      <div class="team-head"><h4>England</h4><span class="count" id="countEngland">0</span></div>
+      <div class="team-list" id="listEngland"></div>
+    </div>
+    <div class="team-panel" id="teamAustralia" data-team="australia">
+      <div class="team-head"><h4>Australia &amp; Friends</h4><span class="count" id="countAustralia">0</span></div>
+      <div class="team-list" id="listAustralia"></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================= SCHEDULE ================= -->
+<section id="schedule">
+  <div class="section-head">
+    <h2>Day Schedule</h2>
+    <span class="section-tag">Saturday 22 August 2026 · 15-minute blocks</span>
+  </div>
+  <p class="lede">Built from the venue/vendor-facing "Schedule" tab, the wedding-party role assignments, and the narrative weekend plan. <span class="flag">Flagged rows</span> are genuine open questions still on Ed's draft, not confirmed plans.</p>
+  <div class="sched-legend">
+    <span><strong>Groomsparty</strong> = Best Men &amp; Groomsmen</span>
+    <span><strong>Bridal Party</strong> = Maid of Honour, Bridesmaids &amp; Bridesman</span>
+    <span><span class="flag">⚠</span> = open question, not yet confirmed</span>
+  </div>
+
+  <div class="sched-scroll">
+  <table class="sched">
+    <thead><tr>
+      <th>Time</th><th>Ed</th><th>Laura</th><th>Groomsparty</th><th>Bridal Party</th><th>Family</th><th>Guests</th><th>Location</th>
+    </tr></thead>
+    <tbody>
+      <tr class="divider"><td colspan="8">Morning — getting ready</td></tr>
+      <tr><td class="time">07:00</td><td>Asleep / free, at the groomsmen's flat</td><td>Hair &amp; make-up begins</td><td>Free, breakfast at the flat</td><td>Hair &amp; make-up alongside Laura</td><td>Travelling to Oxford / at accommodation</td><td>Travelling to Oxford</td><td>Groomsmen's flat, Oxford / Dove House Farm</td></tr>
+      <tr><td class="time">07:15</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td class="time">07:30</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td class="time">07:45</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td class="time">08:00</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td class="time">08:15</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td class="time">08:30</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td class="time">08:45</td><td>Waking, getting ready to run</td><td>Hair &amp; make-up continues</td><td>Waking, getting ready to run</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td class="time">09:00</td><td>Parkrun — University Parks</td><td>Hair &amp; make-up continues</td><td>Parkrun with Ed</td><td>Hair &amp; make-up continues</td><td>—</td><td>Optional — all welcome to join</td><td>University Parks</td></tr>
+      <tr><td class="time">09:15</td><td>Parkrun continues</td><td>Hair &amp; make-up continues</td><td>Parkrun continues</td><td>Hair &amp; make-up continues</td><td>—</td><td>Optional parkrun</td><td>University Parks</td></tr>
+      <tr><td class="time">09:30</td><td>Post-parkrun breakfast</td><td>Hair &amp; make-up continues</td><td>Post-parkrun breakfast</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>Groomsmen's flat / cafe</td></tr>
+      <tr><td class="time">09:45</td><td>Breakfast continues</td><td>Hair &amp; make-up continues</td><td>Breakfast continues</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td class="time">10:00</td><td>Breakfast continues</td><td>Hair &amp; make-up continues</td><td>Breakfast continues</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td class="time">10:15</td><td>Breakfast winding down</td><td>Hair &amp; make-up continues</td><td>Breakfast winding down</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td class="time">10:30</td><td>Showers</td><td>Hair &amp; make-up continues</td><td>Showers</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>Groomsmen's flat</td></tr>
+      <tr><td class="time">10:45</td><td>Showers</td><td>Hair &amp; make-up continues</td><td>Showers</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td class="time">11:00</td><td>Showers</td><td>Hair &amp; make-up finishing</td><td>Showers</td><td>Hair &amp; make-up finishing</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td class="time">11:15</td><td>Showers finishing</td><td>Hair &amp; make-up finishing</td><td>Showers finishing</td><td>Hair &amp; make-up finishing</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td class="time">11:30</td><td>Dressing — into the suit</td><td>Getting into the dress <em>(est.)</em></td><td>Dressing alongside Ed</td><td>Helping Laura into her dress <em>(est.)</em></td><td>—</td><td>—</td><td>Groomsmen's flat / Dove House Farm</td></tr>
+      <tr><td class="time">11:45</td><td>Dressing continues</td><td>Dress continues <em>(est.)</em></td><td>Dressing continues</td><td>Continues <em>(est.)</em></td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td class="time">12:00</td><td>Buttonholes, final prep</td><td>Final touches <em>(est.)</em></td><td>Buttonholes, final prep</td><td>Final touches <em>(est.)</em></td><td>Travelling to church</td><td>Travelling to Oxford / church</td><td>—</td></tr>
+      <tr><td class="time">12:15</td><td>Final prep</td><td>Final touches <em>(est.)</em></td><td>Final prep</td><td>Final touches <em>(est.)</em></td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td class="time">12:30</td><td>Travel to church</td><td>Bridal car to church <em>(est.)</em></td><td>Travel to church with Ed</td><td>Travel with Laura <em>(est.)</em></td><td>Arrive by 12:45</td><td>Arrive by 12:45 — collect order of service, take seats</td><td>Route to St Margaret's</td></tr>
+      <tr><td class="time">12:45</td><td>Waiting at the altar</td><td>En route <em>(est.)</em></td><td>At the church with Ed; ushers (Danny Harford, Nick Mann) seat guests</td><td>With Laura <em>(est.)</em></td><td>Seated</td><td>Seated</td><td>St Margaret's Church</td></tr>
+
+      <tr class="divider"><td colspan="8">Ceremony</td></tr>
+      <tr><td class="time">13:00</td><td>Ceremony begins</td><td>Arrives, processes in</td><td>Best men stand with Ed</td><td>Process in with Laura</td><td>Watching</td><td>Watching</td><td>St Margaret's Church</td></tr>
+      <tr><td class="time">13:15</td><td>Readings &amp; sermon</td><td>Readings &amp; sermon</td><td>Watching</td><td>Watching</td><td>Watching — Rebecca Green &amp; Elliot Greenwood read, Toni Walsh reads the bible passage</td><td>Watching</td><td>St Margaret's Church</td></tr>
+      <tr><td class="time">13:30</td><td>Vows &amp; ring exchange</td><td>Vows &amp; ring exchange</td><td>Rings handed over</td><td>Watching</td><td>Meg West &amp; James West sign as witnesses</td><td>Watching</td><td>St Margaret's Church</td></tr>
+      <tr><td class="time">13:45</td><td>Married — church photos <em>(est.)</em></td><td>Married — church photos <em>(est.)</em></td><td>Photos <em>(est.)</em></td><td>Photos <em>(est.)</em></td><td>Photos <em>(est.)</em></td><td>Filing out</td><td>St Margaret's Church</td></tr>
+
+      <tr class="divider"><td colspan="8">Walk to the reception</td></tr>
+      <tr><td class="time">14:00</td><td>Guided walk across Port Meadow</td><td>Guided walk across Port Meadow</td><td>James West, Ed Kirwan, Tom Stevens &amp; Elliot Greenwood guide as "Port Meadow Sherpas"</td><td>Walking with the group</td><td>Walking, or taxi/drive via Binsey Lane</td><td>Walking (~15 min, flat shoes recommended), or taxi/drive</td><td>Port Meadow</td></tr>
+      <tr><td class="time">14:15</td><td>Arriving at the Medley</td><td>Arriving at the Medley</td><td>Arriving</td><td>Arriving</td><td>Arriving</td><td>Arriving</td><td>Port Meadow → Medley Walled Garden</td></tr>
+
+      <tr class="divider"><td colspan="8">Drinks reception</td></tr>
+      <tr><td class="time">14:30</td><td>Welcome drinks &amp; canapés</td><td>Welcome drinks &amp; canapés</td><td>Mingling</td><td>Mingling</td><td>Mingling</td><td>Welcome drinks &amp; canapés, cocktail hour begins</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">14:45</td><td>Drinks &amp; canapés continue</td><td>Drinks &amp; canapés continue</td><td>—</td><td>—</td><td>—</td><td>Drinks &amp; canapés continue</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">15:00</td><td>Drinks &amp; canapés continue</td><td>Drinks &amp; canapés continue</td><td>—</td><td>—</td><td>—</td><td>Drinks &amp; canapés continue</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">15:15</td><td>Drinks &amp; canapés continue</td><td>Drinks &amp; canapés continue</td><td>—</td><td>—</td><td>—</td><td>Drinks &amp; canapés continue</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">15:30</td><td>Drinks &amp; canapés continue</td><td>Drinks &amp; canapés continue</td><td>—</td><td>—</td><td>—</td><td>Drinks &amp; canapés continue</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">15:45</td><td>Guests asked to find seats</td><td>Guests asked to find seats</td><td>Finding seats</td><td>Finding seats</td><td>Finding seats</td><td>Finding seats</td><td>Medley Walled Garden</td></tr>
+
+      <tr class="divider"><td colspan="8">Speeches &amp; wedding breakfast</td></tr>
+      <tr><td class="time">16:00</td><td>Listening</td><td>Listening</td><td>Listening</td><td>Listening</td><td>Speech 1 — Peter Harford, father of the bride</td><td>Listening</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">16:15</td><td>Listening</td><td>Speech 2 — Laura</td><td>Listening</td><td>Listening</td><td>Listening</td><td>Listening</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">16:30</td><td>Starter served</td><td>Starter served</td><td>Starter served</td><td>Starter served</td><td>Starter served</td><td>Starter — peach &amp; burrata salad</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">16:45</td><td>Starter continues</td><td>Starter continues</td><td>Starter continues</td><td>Starter continues</td><td>Starter continues</td><td>Starter continues</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">17:00</td><td>Main served</td><td>Main served</td><td>Main served</td><td>Main served</td><td>Main served</td><td>Main — sirloin off the Trailblazer BBQ, chimichurri, sides</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">17:15</td><td>Main continues</td><td>Main continues</td><td>Main continues</td><td>Main continues</td><td>Main continues</td><td>Main continues</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">17:30</td><td>Listening</td><td>Listening</td><td>Listening</td><td>Speech 3 — Kate Harford, Maid of Honour</td><td>Listening</td><td>Listening</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">17:45</td><td>Speech 4 — Ed</td><td>Listening</td><td>Listening</td><td>Listening</td><td>Listening</td><td>Listening</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">18:00</td><td>Dessert served</td><td>Dessert served</td><td>Dessert served</td><td>Dessert served</td><td>Dessert served</td><td>Dessert — chocolate cremeux with strawberries</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">18:15</td><td>Dessert continues</td><td>Dessert continues</td><td>Dessert continues</td><td>Dessert continues</td><td>Dessert continues</td><td>Dessert continues</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">18:30</td><td>Listening</td><td>Listening</td><td>Speech 5 — Harry Wilson &amp; George Rendall (joint)</td><td>Listening</td><td>Listening</td><td>Listening</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">18:45</td><td>Mingling</td><td>Mingling</td><td>Mingling</td><td>Mingling</td><td>Mingling</td><td>Cocktails resume, tables cleared</td><td>Medley Walled Garden</td></tr>
+
+      <tr class="divider"><td colspan="8">Evening — dancing</td></tr>
+      <tr><td class="time">19:00</td><td>Mingling</td><td>Mingling</td><td>Mingling</td><td>Mingling</td><td>Mingling</td><td>Cocktail hour</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">19:15</td><td>First dance <span class="flag">⚠</span></td><td>First dance <span class="flag">⚠</span></td><td>Watching</td><td>Watching</td><td>Watching</td><td>Watching — DJ music per the draft schedule</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">19:30</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>DJ music, dancefloor open</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">19:45</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>DJ music continues</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">20:00</td><td>Dancing <span class="flag">⚠</span></td><td>Dancing <span class="flag">⚠</span></td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Band "Truly Medley Deeply" first set begins <span class="flag">⚠ also listed as first dance</span></td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">20:15</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Band first set continues</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">20:30</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Band first set continues</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">20:45</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Band first set continues</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">21:00</td><td>Dancing / food</td><td>Dancing / food</td><td>Dancing / food</td><td>Dancing / food</td><td>Dancing / food</td><td>DJ music &amp; pizza (Medley's pizza oven)</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">21:15</td><td>Dancing / food</td><td>Dancing / food</td><td>Dancing / food</td><td>Dancing / food</td><td>Dancing / food</td><td>Pizza &amp; DJ continue</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">21:30</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Band second set</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">21:45</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Band second set continues</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">22:00</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Band second set continues</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">22:15</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>DJ music</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">22:30</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>DJ music continues</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">22:45</td><td>Last dances</td><td>Last dances</td><td>Last dances</td><td>Last dances</td><td>Last dances</td><td>DJ music continues</td><td>Medley Walled Garden</td></tr>
+
+      <tr class="divider"><td colspan="8">Carriages</td></tr>
+      <tr><td class="time">23:00</td><td>Music finishes</td><td>Music finishes</td><td>Music finishes</td><td>Music finishes</td><td>Music finishes</td><td>Music finishes</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">23:15</td><td>Carriages <span class="flag">⚠</span></td><td>Carriages <span class="flag">⚠</span></td><td>Carriages</td><td>Carriages</td><td>Carriages</td><td>Carriages / guided walk to Jericho? — route marked as unconfirmed on Ed's draft</td><td>Medley Walled Garden</td></tr>
+      <tr><td class="time">23:30</td><td>Departing <span class="flag">⚠</span></td><td>Departing <span class="flag">⚠</span></td><td>Departing</td><td>Departing</td><td>Departing</td><td>Taxis from Jericho? / guided twilight walk to Walton Well car park — also unconfirmed</td><td>Walton Well Car Park</td></tr>
+      <tr><td class="time">23:45</td><td>Day ends</td><td>Day ends</td><td>Day ends</td><td>Day ends</td><td>Day ends</td><td>Day ends</td><td>—</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ================= WHO'S WHO ================= -->
+<section id="who">
+  <div class="section-head">
+    <h2>Who's Who</h2>
+    <span class="section-tag">Wedding party, family, and how everyone connects</span>
+  </div>
+  <p class="lede">Pulled from Ed's Life Summary files so the roles above make sense at a glance — who's closest to whom, and why they're standing where they're standing.</p>
+
+  <div class="who-grid">
+    <div class="who-card"><span class="role">Best Man</span><h4>Harry Wilson</h4><p>School friend from Magdalen College School, joined age 13. Went to the Ashes First Test in Perth with Ed, Nov 2025.</p></div>
+    <div class="who-card"><span class="role">Best Man</span><h4>George Rendall</h4><p>School friend from MCS; former flatmate at Peabody Cottages before Laura moved in. One of Ed's closest friends.</p></div>
+    <div class="who-card"><span class="role">Groomsman</span><h4>George Stapleton</h4><p>Ed's brother. Married to Grace Gleave; daughter Poppy turns 2 on 24 Oct 2026.</p></div>
+    <div class="who-card"><span class="role">Groomsman</span><h4>Tom Kilford</h4><p>Durham housemate (2nd &amp; 4th year), same as Chris de Souza. Ran the Rome Marathon with Ed, March 2026.</p></div>
+    <div class="who-card"><span class="role">Groomsman</span><h4>Tom Stevens</h4><p>School friend from Langford, Gloucestershire; Shandy Shack co-founder.</p></div>
+    <div class="who-card"><span class="role">Master of Ceremonies</span><h4>Chris Murphy</h4><p>Close friend — Ed is officiating Chris's own wedding in Catalonia, September 2026.</p></div>
+    <div class="who-card"><span class="role">Maid of Honour</span><h4>Kate Harford</h4><p>Laura's sister. Married to Nick Mann; three daughters (Natalie, Georgia, Sophia).</p></div>
+    <div class="who-card"><span class="role">Bridesmaid</span><h4>Sammy Lee</h4><p>Perth childhood friend of Laura's.</p></div>
+    <div class="who-card"><span class="role">Bridesmaid</span><h4>Philippa Nicholson</h4><p>School friend (Ursuline / Chelmsford). Marrying Steve in September 2026.</p></div>
+    <div class="who-card"><span class="role">Bridesmaid</span><h4>Jess Findlay</h4><p>St Andrews university friend.</p></div>
+    <div class="who-card"><span class="role">Bridesmaid</span><h4>Kirsty Macintosh</h4><p>Friend of Laura's — marrying Joe Riley 5 Sept 2026, the same weekend as Chris Murphy's Catalonia wedding.</p></div>
+    <div class="who-card"><span class="role">Bridesman</span><h4>Nic Wells</h4><p>Friend of Laura's.</p></div>
+    <div class="who-card"><span class="role">Ushers</span><h4>Danny Harford &amp; Nick Mann</h4><p>Laura's brother (engaged to Amy Pavlis, son Theo) and Kate's husband.</p></div>
+    <div class="who-card"><span class="role">Witnesses</span><h4>Meg West &amp; James West</h4><p>Meg is the mutual friend who set Ed and Laura up on their blind date in August 2018, after meeting Laura on her year abroad in Mexico.</p></div>
+    <div class="who-card"><span class="role">Readers</span><h4>Rebecca Green, Elliot Greenwood &amp; Toni Walsh</h4><p>Two readings plus the bible passage (Toni).</p></div>
+    <div class="who-card"><span class="role">Port Meadow Sherpas</span><h4>James West, Ed Kirwan, Tom Stevens, Elliot Greenwood</h4><p>Guide guests on foot from the church to the reception.</p></div>
+  </div>
+
+  <div class="subhead">How Ed &amp; Laura met</div>
+  <p class="lede">Blind date, August 2018, at Bar Elba, Waterloo — set up by mutual friend Meg West, who met Laura during her year abroad in Mexico. Made official at a Tom Misch concert in Brixton, November 2018. Engaged 29 December 2024 at Lake Grasmere.</p>
+
+  <div class="subhead">Immediate family</div>
+  <div class="who-grid">
+    <div class="who-card"><span class="role">Ed's parents</span><h4>Liz &amp; Mark Stapleton</h4><p>Liz was Deputy Head of the Junior School at Magdalen College School, where Ed and both best men were pupils. Live in Croughton, Northants.</p></div>
+    <div class="who-card"><span class="role">Ed's brother</span><h4>George Stapleton</h4><p>Married to Grace Gleave; daughter Poppy. Lives in Deal, Kent.</p></div>
+    <div class="who-card"><span class="role">Laura's parents</span><h4>Peter Harford &amp; Christine</h4><p>Separated around 2004/05. Christine remarried to Rick Deacon and lives in Stock, Essex.</p></div>
+    <div class="who-card"><span class="role">Laura's brother</span><h4>Danny Harford</h4><p>Engaged to Amy Pavlis; son Theo (born Oct 2025).</p></div>
+    <div class="who-card"><span class="role">Laura's sister</span><h4>Kate Harford</h4><p>Maid of Honour. Married to Nick Mann; three daughters.</p></div>
+  </div>
+
+  <div class="subhead">Dietary requirements &amp; allergies — live RSVP export</div>
+  <div class="sched-scroll">
+  <table class="diet">
+    <thead><tr><th>Guest</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td>Anna Cooke</td><td>Vegan</td></tr>
+      <tr><td>Laura Harford</td><td>Vegetarian</td></tr>
+      <tr><td>Shruti Ayyar</td><td>Vegetarian</td></tr>
+      <tr><td>Nina Selmer</td><td>Vegetarian</td></tr>
+      <tr><td>Hannah Lear</td><td>Vegetarian</td></tr>
+      <tr><td>Jess Findlay</td><td>Bringing 1 vegetarian guest</td></tr>
+      <tr><td>Grace Gleave</td><td>Pescatarian</td></tr>
+      <tr><td>Harry Wilson</td><td>Pescatarian</td></tr>
+      <tr><td>Emily Phillips</td><td>Pescatarian</td></tr>
+      <tr><td>Maya Kadirgamar &amp; Carlos Mandeville</td><td>Pescatarian</td></tr>
+      <tr><td>Lauriane Flais &amp; Cameron Aughterson</td><td>Pescatarian</td></tr>
+      <tr><td>George Rendall</td><td>Pine nut allergy (fine unless eaten; all other nuts OK)</td></tr>
+      <tr><td>Scott Stacey</td><td>Nut allergy</td></tr>
+      <tr><td>Jeremy Talbot</td><td>Allergic to lobster and crab</td></tr>
+      <tr><td>Chang-In Jung</td><td>Allergic to abalone</td></tr>
+      <tr><td>Katie Armour</td><td>Gluten intolerant</td></tr>
+      <tr><td>James Aughterson</td><td>Gluten free</td></tr>
+      <tr><td>Polly Kilford</td><td>Light on dairy, please</td></tr>
+      <tr><td>Craig Ridley</td><td>No cheese</td></tr>
+      <tr><td>Peter Harford</td><td>"Plenty of meat, please"</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="subhead">Key vendor contacts</div>
+  <div class="who-grid">
+    <div class="who-card"><span class="role">Catering</span><h4>Ian Jobbins — Shakespeare Kitchen</h4><p>contact@shakespearekitchen.co.uk · 01789 453 965</p></div>
+    <div class="who-card"><span class="role">Venue</span><h4>Chloe Gee — The Medley Walled Garden</h4><p>chloe@themedleywalledgarden.co.uk</p></div>
+    <div class="who-card"><span class="role">Vicar</span><h4>Daniel Walters — St Margaret's</h4><p>vicar@stgilesstmargarets.org · 01865 559409</p></div>
+    <div class="who-card"><span class="role">Organist</span><h4>Richard Goodall</h4><p>richard.organist@hotmail.co.uk · approx. £180 fee</p></div>
+    <div class="who-card"><span class="role">Flowers</span><h4>Sara Jakeman — Bloomin' Chic</h4><p>info@bloominchic.com · 01865 236450</p></div>
+    <div class="who-card"><span class="role">Classic car hire</span><h4>Robbie Gillison — RNG Classics</h4><p>hello@rngclassics.com · 0777 9793509</p></div>
+  </div>
+</section>
+
+</main>
+
+<footer>Built from the "Ed &amp; Laura — Wedding Planner" spreadsheet, the Supabase RSVP export (synced 4 July 2026), and Ed's Life Summary files. Flagged items reflect genuine open questions on Ed's own working documents, not assumptions.</footer>
+
+</div>
+
+<script>
+  (function(){
+    var ALLOWED_USERS = ['edwardstapleton@me.com', 'lem.harford@gmail.com'];
+    var PASSWORD = 'STARFORD220826';
+    var STORAGE_KEY = 'wcc_auth_v1';
+
+    var gate = document.getElementById('authGate');
+    var app = document.getElementById('appContent');
+    var form = document.getElementById('gateForm');
+    var emailInput = document.getElementById('gateEmail');
+    var passwordInput = document.getElementById('gatePassword');
+    var errorEl = document.getElementById('gateError');
+
+    function unlock(){
+      gate.classList.add('hidden');
+      app.classList.remove('hidden');
+    }
+
+    if (localStorage.getItem(STORAGE_KEY) === '1') {
+      unlock();
+    }
+
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var email = (emailInput.value || '').trim().toLowerCase();
+      var password = passwordInput.value || '';
+      if (ALLOWED_USERS.indexOf(email) !== -1 && password === PASSWORD) {
+        localStorage.setItem(STORAGE_KEY, '1');
+        errorEl.textContent = '';
+        unlock();
+      } else {
+        errorEl.textContent = "Email or password doesn't look right.";
+        passwordInput.value = '';
+        passwordInput.focus();
+      }
+    });
+  })();
+</script>
+
+<script>
+  // Nav + scroll spy
+  var buttons = Array.prototype.slice.call(document.querySelectorAll('#nav button'));
+  var sections = buttons.map(function(b){ return document.getElementById(b.getAttribute('data-target')); });
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var target = document.getElementById(btn.getAttribute('data-target'));
+      if(target){ target.scrollIntoView({behavior:'smooth', block:'start'}); }
+    });
+  });
+  function setActive(){
+    var pos = window.scrollY + 100;
+    var current = sections[0];
+    sections.forEach(function(sec){ if(sec && sec.offsetTop <= pos){ current = sec; } });
+    buttons.forEach(function(b){ b.classList.toggle('active', current && b.getAttribute('data-target') === current.id); });
+  }
+  window.addEventListener('scroll', setActive, {passive:true});
+  setActive();
+
+  // Live countdown to 22 Aug 2026 13:00 BST (UTC+1)
+  function updateCountdown(){
+    var wedding = new Date('2026-08-22T13:00:00+01:00');
+    var now = new Date();
+    var diffMs = wedding - now;
+    var el = document.getElementById('countdown');
+    if(diffMs <= 0){ el.textContent = 'Today is the day'; return; }
+    var days = Math.floor(diffMs / 86400000);
+    var hours = Math.floor((diffMs % 86400000) / 3600000);
+    el.textContent = days + 'd ' + hours + 'h to go';
+  }
+  updateCountdown();
+  setInterval(updateCountdown, 60000);
+</script>
+<script>
+
+  // ---------- Table planner ----------
+  (function(){
+    var GUESTS = [{"label":"Abby MacPherson","side":"Ed","dietary":null},{"label":"Alex Aughterson","side":"Ed","dietary":null},{"label":"Alex Macpherson","side":"Ed","dietary":null},{"label":"Ashlea McKee","side":"Ed","dietary":null},{"label":"Becca Stapleton","side":"Ed","dietary":null},{"label":"Ben Aughterson","side":"Ed","dietary":null},{"label":"Cameron Aughterson","side":"Ed","dietary":"Pescatarian"},{"label":"Catherine Critchley","side":"Ed","dietary":null},{"label":"Chloe Giles","side":"Ed","dietary":null},{"label":"Chris Murphy","side":"Ed","dietary":null},{"label":"Christopher de Souza","side":"Ed","dietary":"n/a"},{"label":"Dalya Kurer","side":"Ed","dietary":null},{"label":"Dave Biggs","side":"Ed","dietary":null},{"label":"David Mafullul","side":"Ed","dietary":null},{"label":"Ed Kirwan","side":"Ed","dietary":"None"},{"label":"Edward Stapleton","side":"Ed","dietary":null},{"label":"Elliot Greenwood","side":"Ed","dietary":"No"},{"label":"Emily Cleaton","side":"Ed","dietary":"No"},{"label":"Florian Coste","side":"Ed","dietary":null},{"label":"George Rendall","side":"Ed","dietary":"pine nut allergy (only an issue if eaten; all other nuts absolutely fine)"},{"label":"George Stapleton","side":"Ed","dietary":"N/a"},{"label":"Georgina Chamberlain","side":"Ed","dietary":null},{"label":"Grace Gleave","side":"Ed","dietary":"Pescatarian"},{"label":"Hannah Kirwan","side":"Ed","dietary":"None"},{"label":"Harry Wilson","side":"Ed","dietary":"Pescatarian."},{"label":"Isabel Aughterson","side":"Ed","dietary":null},{"label":"Isobel Fleming","side":"Ed","dietary":null},{"label":"Isobel Sherman","side":"Ed","dietary":null},{"label":"James Aughterson","side":"Ed","dietary":"Gluten Free"},{"label":"James Chamberlain","side":"Ed","dietary":null},{"label":"James Sherman","side":"Ed","dietary":"Allergic to Macca’s shit chat"},{"label":"James West","side":"Ed","dietary":"No"},{"label":"Jeremy Talbot","side":"Ed","dietary":"Allergy - lobster and crab"},{"label":"Jess Biggs","side":"Ed","dietary":null},{"label":"Lauriane Flais","side":"Ed","dietary":"Pescatarian"},{"label":"Liz Stapleton","side":"Ed","dietary":null},{"label":"Marcus Stapleton","side":"Ed","dietary":null},{"label":"Mark Stapleton","side":"Ed","dietary":null},{"label":"Matthew Houlden","side":"Ed","dietary":null},{"label":"Meaghan Coffey","side":"Ed","dietary":null},{"label":"Oliver Parsons","side":"Ed","dietary":null},{"label":"Oluwasayo Sogbesan","side":"Ed","dietary":null},{"label":"Peter Critchley","side":"Ed","dietary":null},{"label":"Polly Kilford","side":"Ed","dietary":"Light on dairy please (a bit fine)"},{"label":"Robin Irvine","side":"Ed","dietary":null},{"label":"Rosanna Talbot","side":"Ed","dietary":null},{"label":"Rupert Giles","side":"Ed","dietary":null},{"label":"Shruti Ayyar","side":"Ed","dietary":"Vegetarian"},{"label":"Sophie Kekwick","side":"Ed","dietary":"No"},{"label":"Stephi Stapleton Barnes","side":"Ed","dietary":null},{"label":"Tom Kilford","side":"Ed","dietary":null},{"label":"Tom Stevens","side":"Ed","dietary":"Nil"},{"label":"Adrian Linney","side":"Laura","dietary":"None"},{"label":"Alasdair McCrone","side":"Laura","dietary":null},{"label":"Alex Rattan","side":"Laura","dietary":null},{"label":"Amy Pavlis","side":"Laura","dietary":null},{"label":"Andrew Harford","side":"Laura","dietary":null},{"label":"Anna Cooke","side":"Laura","dietary":"Vegan plz :)"},{"label":"Baldo Tranchina","side":"Laura","dietary":"None"},{"label":"Brenda Harford","side":"Laura","dietary":null},{"label":"Calum Walker","side":"Laura","dietary":null},{"label":"Carlos Mandeville","side":"Laura","dietary":"Pescatarian"},{"label":"Chang-In Jung","side":"Laura","dietary":"allergic to abalone"},{"label":"Chloe Rosenthal","side":"Laura","dietary":null},{"label":"Christine Deacon","side":"Laura","dietary":null},{"label":"Ciarán Martin","side":"Laura","dietary":"No"},{"label":"Craig Ridley","side":"Laura","dietary":"No cheese"},{"label":"Daniel Harford","side":"Laura","dietary":null},{"label":"Deborah Hanson","side":"Laura","dietary":null},{"label":"Emily Phillips","side":"Laura","dietary":"Pescatarian"},{"label":"Fionan Walsh","side":"Laura","dietary":"Nope"},{"label":"Georgia Prendergast","side":"Laura","dietary":null},{"label":"Hannah Lear","side":"Laura","dietary":"Vegetarian x"},{"label":"Hugh Harding","side":"Laura","dietary":null},{"label":"Jack Barratt","side":"Laura","dietary":null},{"label":"James Bodger","side":"Laura","dietary":null},{"label":"James Harford","side":"Laura","dietary":null},{"label":"Jasmine Law","side":"Laura","dietary":"None"},{"label":"Jeremy Lee","side":"Laura","dietary":null},{"label":"Jess Findlay","side":"Laura","dietary":"1 x vegetarian"},{"label":"Joe Riley","side":"Laura","dietary":"No"},{"label":"Julie Howell","side":"Laura","dietary":"No"},{"label":"Kassie Bretherton","side":"Laura","dietary":null},{"label":"Kate Harford","side":"Laura","dietary":null},{"label":"Katie Armour","side":"Laura","dietary":"Gluten intolerant and incredibly sorry"},{"label":"Kaz Bridges","side":"Laura","dietary":null},{"label":"Kirsty Macintosh","side":"Laura","dietary":"No"},{"label":"Laura Harford","side":"Laura","dietary":"Vegetarian"},{"label":"Malcolm Harford","side":"Laura","dietary":null},{"label":"Martin McNulty","side":"Laura","dietary":"No"},{"label":"Maya Kadirgamar","side":"Laura","dietary":"Pescatarians"},{"label":"Megan Ridley","side":"Laura","dietary":"None"},{"label":"Molly Daly","side":"Laura","dietary":"NONE"},{"label":"Ned Smith","side":"Laura","dietary":"N/A"},{"label":"Nic Wells","side":"Laura","dietary":"N/A"},{"label":"Nicholas Mann","side":"Laura","dietary":null},{"label":"Nick Harford","side":"Laura","dietary":null},{"label":"Nina Selmer","side":"Laura","dietary":"Vegetarian"},{"label":"Peter Harford","side":"Laura","dietary":"Plenty of meat please"},{"label":"Philippa Nicholson","side":"Laura","dietary":null},{"label":"Rick Deacon","side":"Laura","dietary":null},{"label":"Sammy Lee","side":"Laura","dietary":null},{"label":"Scott Stacey","side":"Laura","dietary":"Nut allergy"},{"label":"Stephen Bridges","side":"Laura","dietary":null},{"label":"Stephen Tate","side":"Laura","dietary":null},{"label":"Thomas Wilson","side":"Laura","dietary":null},{"label":"Toni Walsh","side":"Laura","dietary":"Nope ... easy as pie"},{"label":"Tracy Harford-Li","side":"Laura","dietary":null},{"label":"Meg West","side":"Laura, Ed","dietary":null},{"label":"Tobi Owens","side":"Laura, Ed","dietary":null}];
+    var STORAGE_KEY = 'wedding-table-plan-v1';
+
+    var guestByKey = {};
+    GUESTS.forEach(function(g){ guestByKey[g.label] = g; });
+
+    function sideClass(side){
+      if(side === 'Ed') return 'side-ed';
+      if(side === 'Laura') return 'side-laura';
+      return 'side-both';
+    }
+
+    function loadSeating(){
+      try{
+        var raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return {};
+        var parsed = JSON.parse(raw);
+        var clean = {};
+        Object.keys(parsed).forEach(function(seatId){
+          if(guestByKey[parsed[seatId]]) clean[seatId] = parsed[seatId];
+        });
+        return clean;
+      }catch(e){ return {}; }
+    }
+
+    var seating = loadSeating();
+
+    function saveSeating(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(seating));
+    }
+
+    function seatedGuestKeys(){
+      var set = {};
+      Object.keys(seating).forEach(function(seatId){ set[seating[seatId]] = seatId; });
+      return set;
+    }
+
+    // ---- seat id plan: top table (14), four long tables (30 each: 15+15) ----
+    var SEAT_IDS = [];
+    for(var i=1;i<=7;i++){ SEAT_IDS.push('tt-a'+i); }
+    for(var i=1;i<=7;i++){ SEAT_IDS.push('tt-b'+i); }
+    for(var t=1;t<=4;t++){
+      for(var i=1;i<=15;i++){ SEAT_IDS.push('lt'+t+'-a'+i); }
+      for(var i=1;i<=15;i++){ SEAT_IDS.push('lt'+t+'-b'+i); }
+    }
+
+    function makeSeatEl(seatId){
+      var el = document.createElement('div');
+      el.className = 'seat';
+      el.dataset.seatId = seatId;
+      fillSeatEl(el, seatId);
+      el.addEventListener('dragover', function(e){ e.preventDefault(); el.classList.add('drag-over'); });
+      el.addEventListener('dragleave', function(){ el.classList.remove('drag-over'); });
+      el.addEventListener('drop', function(e){
+        e.preventDefault();
+        el.classList.remove('drag-over');
+        var guestKey = e.dataTransfer.getData('text/plain');
+        if(!guestKey || !guestByKey[guestKey]) return;
+        var fromSeat = e.dataTransfer.getData('application/x-seat-id');
+        var destGuestKey = seating[seatId];
+        if(fromSeat && fromSeat !== seatId){
+          if(destGuestKey){ seating[fromSeat] = destGuestKey; } else { delete seating[fromSeat]; }
+        }
+        seating[seatId] = guestKey;
+        saveSeating();
+        renderAll();
+      });
+      return el;
+    }
+
+    function fillSeatEl(el, seatId){
+      var guestKey = seating[seatId];
+      el.innerHTML = '';
+      el.draggable = false;
+      el.classList.remove('filled','side-ed','side-laura','side-both');
+      if(!guestKey){
+        el.textContent = '';
+        return;
+      }
+      var g = guestByKey[guestKey];
+      el.classList.add('filled', sideClass(g.side));
+      el.draggable = true;
+      el.textContent = g.label;
+      var x = document.createElement('span');
+      x.className = 'unseat';
+      x.textContent = '×';
+      x.title = 'Unseat ' + g.label;
+      x.addEventListener('click', function(e){
+        e.stopPropagation();
+        delete seating[seatId];
+        saveSeating();
+        renderAll();
+      });
+      el.appendChild(x);
+      el.addEventListener('dragstart', function(e){
+        e.dataTransfer.setData('text/plain', guestKey);
+        e.dataTransfer.setData('application/x-seat-id', seatId);
+        el.classList.add('dragging');
+      });
+      el.addEventListener('dragend', function(){ el.classList.remove('dragging'); });
+    }
+
+    function buildVenue(){
+      // top table: horizontal, two rows of 7 (a row facing out, b row facing the long tables)
+      var ttRig = document.getElementById('topTableRig');
+      ttRig.innerHTML = '';
+      var rowA = document.createElement('div'); rowA.className = 'tt-row';
+      var rowB = document.createElement('div'); rowB.className = 'tt-row';
+      for(var i=1;i<=7;i++){ rowA.appendChild(makeSeatEl('tt-a'+i)); }
+      for(var i=1;i<=7;i++){ rowB.appendChild(makeSeatEl('tt-b'+i)); }
+      var ttSurface = document.createElement('div'); ttSurface.className = 'tt-surface';
+      ttRig.appendChild(rowA); ttRig.appendChild(ttSurface); ttRig.appendChild(rowB);
+
+      // long tables: four columns side by side, each running away from the top table,
+      // two sides of 15 seats stacked vertically either side of the table surface
+      var wrap = document.getElementById('longTables');
+      wrap.innerHTML = '';
+      for(var t=1;t<=4;t++){
+        var block = document.createElement('div'); block.className = 'long-table-block';
+        var title = document.createElement('div'); title.className = 'long-table-title';
+        title.innerHTML = '<h4>Long table ' + t + '</h4><span class="count" data-lt-count="'+t+'">0 / 30</span>';
+        var rig = document.createElement('div'); rig.className = 'long-table-rig';
+        var colA = document.createElement('div'); colA.className = 'lt-col';
+        for(var i=1;i<=15;i++){ colA.appendChild(makeSeatEl('lt'+t+'-a'+i)); }
+        var surf = document.createElement('div'); surf.className = 'lt-surface';
+        var colB = document.createElement('div'); colB.className = 'lt-col';
+        for(var i=1;i<=15;i++){ colB.appendChild(makeSeatEl('lt'+t+'-b'+i)); }
+        rig.appendChild(colA); rig.appendChild(surf); rig.appendChild(colB);
+        block.appendChild(title); block.appendChild(rig);
+        wrap.appendChild(block);
+      }
+    }
+
+    function renderSeats(){
+      SEAT_IDS.forEach(function(seatId){
+        var el = document.querySelector('.seat[data-seat-id="'+seatId+'"]');
+        if(el) fillSeatEl(el, seatId);
+      });
+      for(var t=1;t<=4;t++){
+        var n = 0;
+        for(var i=1;i<=15;i++){
+          if(seating['lt'+t+'-a'+i]) n++;
+          if(seating['lt'+t+'-b'+i]) n++;
+        }
+        var badge = document.querySelector('[data-lt-count="'+t+'"]');
+        if(badge) badge.textContent = n + ' / 30';
+      }
+    }
+
+    function makeChip(g){
+      var chip = document.createElement('div');
+      chip.className = 'chip ' + sideClass(g.side);
+      chip.draggable = true;
+      chip.textContent = g.label;
+      if(g.dietary){
+        var d = document.createElement('span');
+        d.className = 'diet-mark';
+        d.textContent = '*';
+        d.title = g.dietary;
+        chip.appendChild(d);
+      }
+      chip.addEventListener('dragstart', function(e){
+        e.dataTransfer.setData('text/plain', g.label);
+        e.dataTransfer.setData('application/x-seat-id', '');
+        chip.classList.add('dragging');
+      });
+      chip.addEventListener('dragend', function(){ chip.classList.remove('dragging'); });
+      return chip;
+    }
+
+    function renderPool(){
+      var seatedKeys = seatedGuestKeys();
+      var list = document.getElementById('poolList');
+      var q = (document.getElementById('planSearch').value || '').trim().toLowerCase();
+      list.innerHTML = '';
+      var unseated = GUESTS.filter(function(g){ return !seatedKeys[g.label]; });
+      if(q){ unseated = unseated.filter(function(g){ return g.label.toLowerCase().indexOf(q) !== -1; }); }
+      if(unseated.length === 0){
+        var empty = document.createElement('div');
+        empty.className = 'pool-empty';
+        empty.textContent = q ? 'No unseated guests match "' + q + '".' : 'Everyone is seated.';
+        list.appendChild(empty);
+      } else {
+        unseated.forEach(function(g){ list.appendChild(makeChip(g)); });
+      }
+
+      var poolEl = document.getElementById('poolList');
+      poolEl.addEventListener('dragover', function(e){ e.preventDefault(); });
+      poolEl.addEventListener('drop', function(e){
+        var guestKey = e.dataTransfer.getData('text/plain');
+        var fromSeat = e.dataTransfer.getData('application/x-seat-id');
+        if(fromSeat){ delete seating[fromSeat]; saveSeating(); renderAll(); }
+      });
+
+      var count = Object.keys(seatedKeys).length;
+      document.getElementById('planCount').textContent = count + ' / ' + GUESTS.length + ' seated';
+    }
+
+    function renderAll(){
+      renderSeats();
+      renderPool();
+    }
+
+    document.getElementById('planSearch').addEventListener('input', renderPool);
+    document.getElementById('planReset').addEventListener('click', function(){
+      seating = {};
+      saveSeating();
+      renderAll();
+    });
+
+    buildVenue();
+    renderAll();
+  })();
+
+</script>
+<script>
+
+  // ---------- Cricket teams ----------
+  (function(){
+    var CRICKET_GUESTS = [{"label":"Abby MacPherson","side":"Ed"},{"label":"Alex Macpherson","side":"Ed"},{"label":"Becca Stapleton","side":"Ed"},{"label":"Chloe Giles","side":"Ed"},{"label":"Chris Murphy","side":"Ed"},{"label":"Christopher de Souza","side":"Ed"},{"label":"Dalya Kurer","side":"Ed"},{"label":"Dave Biggs","side":"Ed"},{"label":"Ed Kirwan","side":"Ed"},{"label":"Edward Stapleton","side":"Ed"},{"label":"Elliot Greenwood","side":"Ed"},{"label":"Emily Cleaton","side":"Ed"},{"label":"George Rendall","side":"Ed"},{"label":"George Stapleton","side":"Ed"},{"label":"Georgina Chamberlain","side":"Ed"},{"label":"Grace Gleave","side":"Ed"},{"label":"Hannah Kirwan","side":"Ed"},{"label":"Harry Wilson","side":"Ed"},{"label":"Isobel Sherman","side":"Ed"},{"label":"James Chamberlain","side":"Ed"},{"label":"James Sherman","side":"Ed"},{"label":"James West","side":"Ed"},{"label":"Jeremy Talbot","side":"Ed"},{"label":"Jess Biggs","side":"Ed"},{"label":"Liz Stapleton","side":"Ed"},{"label":"Marcus Stapleton","side":"Ed"},{"label":"Mark Stapleton","side":"Ed"},{"label":"Matthew Houlden","side":"Ed"},{"label":"Meaghan Coffey","side":"Ed"},{"label":"Oliver Parsons","side":"Ed"},{"label":"Oluwasayo Sogbesan","side":"Ed"},{"label":"Polly Kilford","side":"Ed"},{"label":"Rosanna Talbot","side":"Ed"},{"label":"Rupert Giles","side":"Ed"},{"label":"Shruti Ayyar","side":"Ed"},{"label":"Sophie Kekwick","side":"Ed"},{"label":"Stephi Stapleton Barnes","side":"Ed"},{"label":"Tom Kilford","side":"Ed"},{"label":"Tom Stevens","side":"Ed"},{"label":"Alex Rattan","side":"Laura"},{"label":"Amy Pavlis","side":"Laura"},{"label":"Andrew Harford","side":"Laura"},{"label":"Anna Cooke","side":"Laura"},{"label":"Baldo Tranchina","side":"Laura"},{"label":"Brenda Harford","side":"Laura"},{"label":"Calum Walker","side":"Laura"},{"label":"Carlos Mandeville","side":"Laura"},{"label":"Chang-In Jung","side":"Laura"},{"label":"Christine Deacon","side":"Laura"},{"label":"Craig Ridley","side":"Laura"},{"label":"Daniel Harford","side":"Laura"},{"label":"Deborah Hanson","side":"Laura"},{"label":"Fionan Walsh","side":"Laura"},{"label":"Georgia Prendergast","side":"Laura"},{"label":"James Harford","side":"Laura"},{"label":"Jasmine Law","side":"Laura"},{"label":"Jeremy Lee","side":"Laura"},{"label":"Jess Findlay","side":"Laura"},{"label":"Julie Howell","side":"Laura"},{"label":"Kate Harford","side":"Laura"},{"label":"Katie Armour","side":"Laura"},{"label":"Kaz Bridges","side":"Laura"},{"label":"Kirsty Macintosh","side":"Laura"},{"label":"Laura Harford","side":"Laura"},{"label":"Malcolm Harford","side":"Laura"},{"label":"Martin McNulty","side":"Laura"},{"label":"Maya Kadirgamar","side":"Laura"},{"label":"Megan Ridley","side":"Laura"},{"label":"Molly Daly","side":"Laura"},{"label":"Ned Smith","side":"Laura"},{"label":"Nic Wells","side":"Laura"},{"label":"Nicholas Mann","side":"Laura"},{"label":"Nick Harford","side":"Laura"},{"label":"Nina Selmer","side":"Laura"},{"label":"Peter Harford","side":"Laura"},{"label":"Rick Deacon","side":"Laura"},{"label":"Sammy Lee","side":"Laura"},{"label":"Scott Stacey","side":"Laura"},{"label":"Stephen Bridges","side":"Laura"},{"label":"Thomas Wilson","side":"Laura"},{"label":"Toni Walsh","side":"Laura"},{"label":"Tracy Harford-Li","side":"Laura"},{"label":"Meg West","side":"Laura, Ed"},{"label":"Tobi Owens","side":"Laura, Ed"}];
+    var STORAGE_KEY = 'wedding-cricket-teams-v1';
+
+    var guestByLabel = {};
+    CRICKET_GUESTS.forEach(function(g){ guestByLabel[g.label] = g; });
+
+    function sideClass(side){
+      if(side === 'Ed') return 'side-ed';
+      if(side === 'Laura') return 'side-laura';
+      return 'side-both';
+    }
+
+    function loadAssignment(){
+      try{
+        var raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return {};
+        var parsed = JSON.parse(raw);
+        var clean = {};
+        Object.keys(parsed).forEach(function(label){
+          if(guestByLabel[label] && (parsed[label] === 'england' || parsed[label] === 'australia')){
+            clean[label] = parsed[label];
+          }
+        });
+        return clean;
+      }catch(e){ return {}; }
+    }
+
+    var assignment = loadAssignment();
+
+    function saveAssignment(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(assignment));
+    }
+
+    function makeChip(g, inTeam){
+      var chip = document.createElement('div');
+      chip.className = 'chip ' + sideClass(g.side);
+      chip.draggable = true;
+      var label = document.createElement('span');
+      label.textContent = g.label;
+      chip.appendChild(label);
+      if(inTeam){
+        var x = document.createElement('span');
+        x.className = 'remove';
+        x.textContent = '×';
+        x.title = 'Unassign ' + g.label;
+        x.addEventListener('click', function(e){
+          e.stopPropagation();
+          delete assignment[g.label];
+          saveAssignment();
+          renderAll();
+        });
+        chip.appendChild(x);
+      }
+      chip.addEventListener('dragstart', function(e){
+        e.dataTransfer.setData('text/plain', g.label);
+        chip.classList.add('dragging');
+      });
+      chip.addEventListener('dragend', function(){ chip.classList.remove('dragging'); });
+      return chip;
+    }
+
+    function renderPool(){
+      var list = document.getElementById('cricketPoolList');
+      var q = (document.getElementById('cricketSearch').value || '').trim().toLowerCase();
+      list.innerHTML = '';
+      var unassigned = CRICKET_GUESTS.filter(function(g){ return !assignment[g.label]; });
+      if(q){ unassigned = unassigned.filter(function(g){ return g.label.toLowerCase().indexOf(q) !== -1; }); }
+      if(unassigned.length === 0){
+        var empty = document.createElement('div');
+        empty.className = 'pool-empty';
+        empty.textContent = q ? 'No unassigned players match "' + q + '".' : 'Everyone eligible has a team.';
+        list.appendChild(empty);
+      } else {
+        unassigned.forEach(function(g){ list.appendChild(makeChip(g, false)); });
+      }
+    }
+
+    function renderTeam(teamKey, listElId, countElId){
+      var listEl = document.getElementById(listElId);
+      listEl.innerHTML = '';
+      var members = CRICKET_GUESTS.filter(function(g){ return assignment[g.label] === teamKey; });
+      if(members.length === 0){
+        var empty = document.createElement('div');
+        empty.className = 'team-empty';
+        empty.textContent = 'Drag players here.';
+        listEl.appendChild(empty);
+      } else {
+        members.forEach(function(g){ listEl.appendChild(makeChip(g, true)); });
+      }
+      document.getElementById(countElId).textContent = members.length;
+    }
+
+    function renderAll(){
+      renderPool();
+      renderTeam('england', 'listEngland', 'countEngland');
+      renderTeam('australia', 'listAustralia', 'countAustralia');
+      var total = CRICKET_GUESTS.length;
+      var assigned = Object.keys(assignment).length;
+      document.getElementById('cricketCount').textContent = assigned + ' / ' + total + ' assigned';
+    }
+
+    function wireDropTarget(el, onDrop){
+      el.addEventListener('dragover', function(e){ e.preventDefault(); el.classList.add('drag-over'); });
+      el.addEventListener('dragleave', function(){ el.classList.remove('drag-over'); });
+      el.addEventListener('drop', function(e){
+        e.preventDefault();
+        el.classList.remove('drag-over');
+        var label = e.dataTransfer.getData('text/plain');
+        if(!label || !guestByLabel[label]) return;
+        onDrop(label);
+      });
+    }
+
+    wireDropTarget(document.getElementById('teamEngland'), function(label){
+      assignment[label] = 'england';
+      saveAssignment();
+      renderAll();
+    });
+    wireDropTarget(document.getElementById('teamAustralia'), function(label){
+      assignment[label] = 'australia';
+      saveAssignment();
+      renderAll();
+    });
+    wireDropTarget(document.getElementById('cricketPoolList'), function(label){
+      delete assignment[label];
+      saveAssignment();
+      renderAll();
+    });
+
+    document.getElementById('cricketSearch').addEventListener('input', renderPool);
+    document.getElementById('cricketReset').addEventListener('click', function(){
+      assignment = {};
+      saveAssignment();
+      renderAll();
+    });
+
+    renderAll();
+  })();
+
+</script>
+
+</body>
+</html>
