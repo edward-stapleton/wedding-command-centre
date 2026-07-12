@@ -244,6 +244,7 @@
   .roster-item.side-both .roster-side{background:linear-gradient(135deg,var(--accent) 50%,var(--laura) 50%);}
   .roster-item .roster-name{flex:1 1 auto;font-size:0.88rem;cursor:grab;}
   .roster-item.dragging{opacity:0.4;}
+  .roster-item.drop-target{box-shadow:inset 0 2px 0 0 var(--accent-dark);}
   .roster-item .role-toggles{display:flex;gap:5px;flex:0 0 auto;}
   .role-pill{
     font:inherit;font-size:0.68rem;font-weight:600;letter-spacing:0.02em;
@@ -599,7 +600,7 @@
     <h2>Cricket Teams</h2>
     <span class="section-tag">Friday 21 Aug · Balliol College · England vs Australia &amp; Friends</span>
   </div>
-  <div class="plan-note">Only guests who've RSVP'd yes to both the wedding and the Friday cricket day are eligible — drag names from the pool onto a team. Drag a player back onto the pool, or use the × next to their name, to unassign them. Once on a team, tap Kit / Captain / WK to tag their role — a player can hold more than one. Saves automatically in this browser.</div>
+  <div class="plan-note">Only guests who've RSVP'd yes to both the wedding and the Friday cricket day are eligible — drag names from the pool onto a team. Drag a player onto another player within a team to reorder them, or drag them back onto the pool (or use the × next to their name) to unassign. Once on a team, tap Kit / Captain / WK to tag their role — a player can hold more than one. Saves automatically in this browser.</div>
 
   <div class="plan-toolbar">
     <input type="text" class="plan-search" id="cricketSearch" placeholder="Search unassigned players…" autocomplete="off">
@@ -1307,6 +1308,38 @@
       return (entry && typeof entry === 'object' && entry.roles) ? entry.roles : {};
     }
 
+    function orderOf(entry){
+      return (entry && typeof entry === 'object' && typeof entry.order === 'number') ? entry.order : Infinity;
+    }
+
+    function teamMembersOrdered(teamKey){
+      return CRICKET_GUESTS
+        .filter(function(g){ return teamOf(assignment[g.label]) === teamKey; })
+        .slice()
+        .sort(function(a, b){
+          var oa = orderOf(assignment[a.label]), ob = orderOf(assignment[b.label]);
+          if(oa !== ob) return oa - ob;
+          return a.label.localeCompare(b.label);
+        });
+    }
+
+    // Assigns label to teamKey, inserting it immediately before beforeLabel
+    // in that team's order (or at the end if beforeLabel is falsy), then
+    // renumbers the whole team 0..n so order stays a clean dense sequence.
+    function insertPlayer(label, teamKey, beforeLabel){
+      var order = teamMembersOrdered(teamKey).map(function(g){ return g.label; });
+      order = order.filter(function(l){ return l !== label; });
+      var idx = beforeLabel ? order.indexOf(beforeLabel) : -1;
+      if(idx === -1){ order.push(label); } else { order.splice(idx, 0, label); }
+      var existingRoles = rolesOf(assignment[label]);
+      order.forEach(function(l, i){
+        var roles = (l === label) ? existingRoles : rolesOf(assignment[l]);
+        assignment[l] = { team: teamKey, roles: roles, order: i };
+      });
+      saveAssignment();
+      renderAll();
+    }
+
     function saveAssignment(){
       try{ localStorage.setItem('wedding-cricket-teams-v1', JSON.stringify(assignment)); }catch(e){}
       saveRemote();
@@ -1340,7 +1373,7 @@
       return chip;
     }
 
-    function makeRosterItem(g){
+    function makeRosterItem(g, teamKey){
       var li = document.createElement('div');
       li.className = 'roster-item ' + sideClass(g.side);
       li.draggable = true;
@@ -1397,6 +1430,25 @@
         li.classList.add('dragging');
       });
       li.addEventListener('dragend', function(){ li.classList.remove('dragging'); });
+
+      // Dropping another player directly on this row reorders/inserts them
+      // just above it (within this team, or moving in from another team/the
+      // pool). stopPropagation so the team-panel's own drop handler (which
+      // appends to the end) doesn't also fire for the same drop.
+      li.addEventListener('dragover', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        li.classList.add('drop-target');
+      });
+      li.addEventListener('dragleave', function(){ li.classList.remove('drop-target'); });
+      li.addEventListener('drop', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        li.classList.remove('drop-target');
+        var label = e.dataTransfer.getData('text/plain');
+        if(!label || !guestByLabel[label] || label === g.label) return;
+        insertPlayer(label, teamKey, g.label);
+      });
       return li;
     }
 
@@ -1419,14 +1471,14 @@
     function renderTeam(teamKey, listElId, countElId){
       var listEl = document.getElementById(listElId);
       listEl.innerHTML = '';
-      var members = CRICKET_GUESTS.filter(function(g){ return teamOf(assignment[g.label]) === teamKey; });
+      var members = teamMembersOrdered(teamKey);
       if(members.length === 0){
         var empty = document.createElement('div');
         empty.className = 'team-empty';
         empty.textContent = 'Drag players here.';
         listEl.appendChild(empty);
       } else {
-        members.forEach(function(g){ listEl.appendChild(makeRosterItem(g)); });
+        members.forEach(function(g){ listEl.appendChild(makeRosterItem(g, teamKey)); });
       }
       document.getElementById(countElId).textContent = members.length;
     }
@@ -1452,21 +1504,14 @@
       });
     }
 
-    function assignTeam(label, teamKey){
-      var existingRoles = rolesOf(assignment[label]);
-      assignment[label] = { team: teamKey, roles: existingRoles };
-      saveAssignment();
-      renderAll();
-    }
-
     function wireOnce(){
       if(built) return;
       built = true;
       wireDropTarget(document.getElementById('teamEngland'), function(label){
-        assignTeam(label, 'england');
+        insertPlayer(label, 'england', null);
       });
       wireDropTarget(document.getElementById('teamAustralia'), function(label){
-        assignTeam(label, 'australia');
+        insertPlayer(label, 'australia', null);
       });
       wireDropTarget(document.getElementById('cricketPoolList'), function(label){
         delete assignment[label];
@@ -1495,7 +1540,24 @@
           if(typeof v === 'object' && v && v.roles){
             ROLE_KEYS.forEach(function(k){ if(v.roles[k]) roles[k] = true; });
           }
-          clean[label] = { team: team, roles: roles };
+          var order = (typeof v === 'object' && v && typeof v.order === 'number') ? v.order : null;
+          clean[label] = { team: team, roles: roles, order: order };
+        });
+        // Renumber each team to a clean dense 0..n sequence. Entries that
+        // already had an order (from a previous save) sort by that; entries
+        // upgrading from the pre-ordering data shape (order === null) fall
+        // back to alphabetical, so the very first load after this feature
+        // shipped doesn't visually shuffle anyone.
+        ['england', 'australia'].forEach(function(teamKey){
+          var labels = Object.keys(clean).filter(function(l){ return clean[l].team === teamKey; });
+          labels.sort(function(a, b){
+            var oa = clean[a].order, ob = clean[b].order;
+            if(oa !== null && ob !== null) return oa - ob;
+            if(oa !== null) return -1;
+            if(ob !== null) return 1;
+            return a.localeCompare(b);
+          });
+          labels.forEach(function(l, i){ clean[l].order = i; });
         });
         assignment = clean;
         wireOnce();
