@@ -261,6 +261,16 @@
   .role-pill.active{background:var(--ink);color:#fff;border-color:var(--ink);}
   .roster-item .remove{color:var(--ink-soft);cursor:pointer;font-weight:700;flex:0 0 auto;padding:0 2px;}
   .roster-item .remove:hover{color:var(--brick);}
+
+  .other-roles-list{max-height:360px;overflow-y:auto;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;background:var(--paper-raised);padding:4px 10px;}
+  .other-role-row{display:flex;align-items:center;gap:10px;padding:7px 2px;border-bottom:1px solid var(--line);}
+  .other-role-row:last-child{border-bottom:none;}
+  .other-role-row .roster-side{width:8px;height:8px;border-radius:50%;flex:0 0 auto;}
+  .other-role-row.side-ed .roster-side{background:var(--accent);}
+  .other-role-row.side-laura .roster-side{background:var(--laura);}
+  .other-role-row.side-both .roster-side{background:linear-gradient(135deg,var(--accent) 50%,var(--laura) 50%);}
+  .other-role-row .other-role-name{flex:1 1 auto;font-size:0.88rem;}
+  .other-role-row .role-toggles{display:flex;flex-wrap:wrap;gap:5px;flex:0 0 auto;}
   .chip .remove{margin-left:auto;color:var(--ink-soft);cursor:pointer;font-weight:700;padding-left:4px;}
   .chip .remove:hover{color:var(--brick);}
 
@@ -606,7 +616,7 @@
     <h2>Cricket Teams</h2>
     <span class="section-tag">Friday 21 Aug · Balliol College · England vs Australia &amp; Friends</span>
   </div>
-  <div class="plan-note">Only guests who've RSVP'd yes to both the wedding and the Friday cricket day are eligible — drag names from the pool onto a team's Full Game, Some Overs, or Short Shift section (dropping anywhere else in a team defaults to Full Game). Drag a player onto another player to reorder them or move them between sections/teams, or drag them back onto the pool (or use the × next to their name) to unassign. Once on a team, tap Kit / Captain / WK / Scorer / Umpire / Drinks to tag their role(s) — a player can hold more than one. Saves automatically in this browser.</div>
+  <div class="plan-note">Only guests who've RSVP'd yes to both the wedding and the Friday cricket day are eligible — drag names from the pool onto a team's Full Game, Some Overs, or Short Shift section (dropping anywhere else in a team defaults to Full Game). Drag a player onto another player to reorder them or move them between sections/teams, or drag them back onto the pool (or use the × next to their name) to unassign. Once on a team, tap Kit / Captain / WK to tag their role(s) — a player can hold more than one. Saves automatically in this browser.</div>
 
   <div class="plan-toolbar">
     <input type="text" class="plan-search" id="cricketSearch" placeholder="Search unassigned players…" autocomplete="off">
@@ -655,6 +665,13 @@
         <div class="team-list" id="listAustraliaShort"></div>
       </div>
     </div>
+  </div>
+
+  <div class="other-roles-block">
+    <div class="section-tag" style="display:block;margin:28px 0 4px;">Other roles — independent of team</div>
+    <p class="lede" style="margin:0 0 14px;">Scorer, Umpire and Drinks Carrier aren't tied to either team — tag anyone eligible for cricket, whether or not they're playing.</p>
+    <input type="text" class="plan-search" id="otherRolesSearch" placeholder="Search guests…" autocomplete="off" style="margin-bottom:12px;width:100%;">
+    <div class="other-roles-list" id="otherRolesList"></div>
   </div>
 </section>
 
@@ -1313,14 +1330,28 @@
 
   // ---------- Cricket teams ----------
   window.CCCricketTeams = (function(){
-    var ROLE_KEYS = ['kit', 'captain', 'wicketkeeper', 'scorer', 'umpire', 'drinks'];
-    var ROLE_LABELS = { kit: 'Kit', captain: 'Captain', wicketkeeper: 'WK', scorer: 'Scorer', umpire: 'Umpire', drinks: 'Drinks' };
-    var ROLE_TITLES = { wicketkeeper: 'Wicketkeeper', drinks: 'Drinks carrier' };
+    var ROLE_KEYS = ['kit', 'captain', 'wicketkeeper'];
+    var ROLE_LABELS = { kit: 'Kit', captain: 'Captain', wicketkeeper: 'WK' };
+    var ROLE_TITLES = { wicketkeeper: 'Wicketkeeper' };
+
+    // "Other roles" (Scorer, Umpire, Drinks Carrier) are match-day duties,
+    // not team positions - they don't sit inside either team's roster and
+    // are independent of team assignment. A guest can hold one, some, or
+    // none of these regardless of whether they're playing for a team.
+    // Saved alongside the team assignments under the same 'cricket' state
+    // key (the command-centre-api edge function only accepts a fixed set of
+    // type values, so this rides along as a sibling field rather than a new
+    // top-level key: { assignments: {...}, otherRoles: {...} }).
+    var OTHER_ROLE_KEYS = ['scorer', 'umpire', 'drinks'];
+    var OTHER_ROLE_LABELS = { scorer: 'Scorer', umpire: 'Umpire', drinks: 'Drinks Carrier' };
+    var otherRoles = {};
     var CRICKET_GUESTS = [];
     var guestByLabel = {};
     var assignment = {};
     var built = false;
-    var saveRemote = ccDebounce(function(){ ccApiPost('cricket', assignment); }, 700);
+    var saveRemote = ccDebounce(function(){
+      ccApiPost('cricket', { assignments: assignment, otherRoles: otherRoles });
+    }, 700);
 
     function sideClass(side){
       if(side === 'Ed') return 'side-ed';
@@ -1402,6 +1433,11 @@
 
     function saveAssignment(){
       try{ localStorage.setItem('wedding-cricket-teams-v1', JSON.stringify(assignment)); }catch(e){}
+      saveRemote();
+    }
+
+    function saveOtherRoles(){
+      try{ localStorage.setItem('wedding-cricket-other-roles-v1', JSON.stringify(otherRoles)); }catch(e){}
       saveRemote();
     }
 
@@ -1565,10 +1601,66 @@
       document.getElementById(countElId).textContent = total;
     }
 
+    function makeOtherRoleRow(g){
+      var row = document.createElement('div');
+      row.className = 'other-role-row ' + sideClass(g.side);
+
+      var dot = document.createElement('span');
+      dot.className = 'roster-side';
+      row.appendChild(dot);
+
+      var name = document.createElement('span');
+      name.className = 'other-role-name';
+      name.textContent = g.label;
+      row.appendChild(name);
+
+      var toggles = document.createElement('span');
+      toggles.className = 'role-toggles';
+      var roles = otherRoles[g.label] || {};
+      OTHER_ROLE_KEYS.forEach(function(roleKey){
+        var pill = document.createElement('button');
+        pill.type = 'button';
+        pill.className = 'role-pill' + (roles[roleKey] ? ' active' : '');
+        pill.textContent = OTHER_ROLE_LABELS[roleKey];
+        pill.addEventListener('click', function(e){
+          e.stopPropagation();
+          var entry = otherRoles[g.label] || {};
+          entry[roleKey] = !entry[roleKey];
+          if(OTHER_ROLE_KEYS.some(function(k){ return entry[k]; })){
+            otherRoles[g.label] = entry;
+          } else {
+            delete otherRoles[g.label];
+          }
+          saveOtherRoles();
+          renderOtherRoles();
+        });
+        toggles.appendChild(pill);
+      });
+      row.appendChild(toggles);
+      return row;
+    }
+
+    function renderOtherRoles(){
+      var list = document.getElementById('otherRolesList');
+      var q = (document.getElementById('otherRolesSearch').value || '').trim().toLowerCase();
+      list.innerHTML = '';
+      var guests = CRICKET_GUESTS;
+      if(q){ guests = guests.filter(function(g){ return g.label.toLowerCase().indexOf(q) !== -1; }); }
+      if(guests.length === 0){
+        var empty = document.createElement('div');
+        empty.className = 'pool-empty';
+        empty.textContent = 'No guests match "' + q + '".';
+        list.appendChild(empty);
+      } else {
+        guests.forEach(function(g){ list.appendChild(makeOtherRoleRow(g)); });
+      }
+    }
+
     function renderAll(){
       renderPool();
       renderTeam('england', ['listEnglandFull', 'listEnglandSome', 'listEnglandShort'], 'countEngland');
       renderTeam('australia', ['listAustraliaFull', 'listAustraliaSome', 'listAustraliaShort'], 'countAustralia');
+      renderOtherRoles();
       var total = CRICKET_GUESTS.length;
       var assigned = Object.keys(assignment).length;
       document.getElementById('cricketCount').textContent = assigned + ' / ' + total + ' assigned';
@@ -1615,6 +1707,7 @@
         unassign(label);
       });
       document.getElementById('cricketSearch').addEventListener('input', renderPool);
+      document.getElementById('otherRolesSearch').addEventListener('input', renderOtherRoles);
       document.getElementById('cricketReset').addEventListener('click', function(){
         assignment = {};
         saveAssignment();
@@ -1623,18 +1716,44 @@
     }
 
     return {
-      init: function(guests, initialAssignment){
+      init: function(guests, cricketPayload){
         CRICKET_GUESTS = guests || [];
         guestByLabel = {};
         CRICKET_GUESTS.forEach(function(g){ guestByLabel[g.label] = g; });
+
+        // Current shape is { assignments: {...}, otherRoles: {...} }. Older
+        // saves are just the assignment map directly (no wrapper) - detect
+        // that by the presence of the wrapper keys (not their truthiness -
+        // assignments could legitimately be an empty {} after "Reset teams").
+        var payload = cricketPayload || {};
+        var rawAssignment, rawOtherRoles;
+        if(typeof payload === 'object' && payload && ('assignments' in payload || 'otherRoles' in payload)){
+          rawAssignment = (payload.assignments && typeof payload.assignments === 'object') ? payload.assignments : {};
+          rawOtherRoles = (payload.otherRoles && typeof payload.otherRoles === 'object') ? payload.otherRoles : {};
+        } else {
+          rawAssignment = payload;
+          rawOtherRoles = {};
+        }
+
+        // A brief earlier version of this feature put Scorer/Umpire/Drinks
+        // inside each team entry's own `roles`. Migrate any such flags found
+        // on legacy entries into the new independent otherRoles bucket
+        // instead of silently dropping them.
+        var migratedOtherRoles = {};
         var clean = {};
-        Object.keys(initialAssignment || {}).forEach(function(label){
-          var v = initialAssignment[label];
+        Object.keys(rawAssignment || {}).forEach(function(label){
+          var v = rawAssignment[label];
           var team = typeof v === 'object' && v ? v.team : v;
           if(!guestByLabel[label] || (team !== 'england' && team !== 'australia')) return;
           var roles = {};
           if(typeof v === 'object' && v && v.roles){
             ROLE_KEYS.forEach(function(k){ if(v.roles[k]) roles[k] = true; });
+            OTHER_ROLE_KEYS.forEach(function(k){
+              if(v.roles[k]){
+                migratedOtherRoles[label] = migratedOtherRoles[label] || {};
+                migratedOtherRoles[label][k] = true;
+              }
+            });
           }
           var duration = (typeof v === 'object' && v && DURATION_KEYS.indexOf(v.duration) !== -1) ? v.duration : 'full';
           var order = (typeof v === 'object' && v && typeof v.order === 'number') ? v.order : null;
@@ -1663,6 +1782,25 @@
           });
         });
         assignment = clean;
+
+        // Merge saved otherRoles with anything recovered from the legacy
+        // in-team location above; saved data wins on overlap (shouldn't
+        // realistically overlap, since the legacy shape predates otherRoles
+        // existing as its own thing at all).
+        var cleanOtherRoles = {};
+        Object.keys(migratedOtherRoles).forEach(function(label){
+          if(guestByLabel[label]) cleanOtherRoles[label] = migratedOtherRoles[label];
+        });
+        Object.keys(rawOtherRoles).forEach(function(label){
+          if(!guestByLabel[label]) return;
+          var r = rawOtherRoles[label];
+          if(!r || typeof r !== 'object') return;
+          var roles = {};
+          OTHER_ROLE_KEYS.forEach(function(k){ if(r[k]) roles[k] = true; });
+          if(Object.keys(roles).length) cleanOtherRoles[label] = roles;
+        });
+        otherRoles = cleanOtherRoles;
+
         wireOnce();
         renderAll();
       }
