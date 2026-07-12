@@ -200,6 +200,16 @@
     cursor:pointer;opacity:0;transition:opacity .12s ease;
   }
   .seat.filled:hover .unseat{opacity:1;}
+  .seat .gender-badge{
+    position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;
+    background:#fff;color:var(--ink);font-size:0.52rem;font-weight:800;line-height:13px;text-align:center;
+    box-shadow:0 0 0 1px var(--line-strong);pointer-events:none;
+  }
+  .chip .gender-badge{
+    flex:0 0 auto;width:15px;height:15px;border-radius:50%;background:var(--paper);
+    border:1px solid var(--line-strong);color:var(--ink-soft);font-size:0.6rem;font-weight:800;
+    line-height:13px;text-align:center;
+  }
 
   /* ---------- Cricket teams ---------- */
   .cricket-teams{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
@@ -523,6 +533,7 @@
       <span><span class="dot" style="background:linear-gradient(135deg,var(--accent) 50%,var(--laura) 50%)"></span>Both</span>
       <span><span class="gold" style="color:var(--gold);font-weight:700;">*</span> dietary note on file</span>
       <span><span class="dot" style="background:var(--accent);opacity:.6;background-image:repeating-linear-gradient(135deg, rgba(255,255,255,0.45) 0 3px, transparent 3px 6px);"></span>Hasn't RSVP'd yet — seated on assumption</span>
+      <span><span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px var(--line-strong);font-size:0.58rem;font-weight:800;line-height:14px;text-align:center;vertical-align:-2px;margin-right:5px;">M</span>/<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px var(--line-strong);font-size:0.58rem;font-weight:800;line-height:14px;text-align:center;vertical-align:-2px;margin:0 5px;">F</span> gender badge, for boy/girl seating</span>
     </span>
     <span class="plan-count" id="planCount">— seated</span>
     <button class="plan-reset" id="planReset" type="button">Reset layout</button>
@@ -843,14 +854,22 @@
   // hatched/dashed "unconfirmed" style. Once a real RSVP row appears for a
   // matching name, ccApplyData below skips the placeholder automatically.
   var UNCONFIRMED_GUESTS = [
-    {label:'Nicola Gould', side:'Ed'},
-    {label:'Doug Gould', side:'Ed'},
-    {label:'Kirsty Kenney', side:'Ed'},
-    {label:"Al (Kirsty K's +1)", side:'Ed'},
-    {label:'Anne Jebara', side:'Ed'}
+    {label:'Nicola Gould', side:'Ed', gender:'F'},
+    {label:'Doug Gould', side:'Ed', gender:'M'},
+    {label:'Kirsty Kenney', side:'Ed', gender:'F'},
+    {label:"Al (Kirsty K's +1)", side:'Ed', gender:'M'},
+    {label:'Anne Jebara', side:'Ed', gender:'F'}
   ];
 
   var GUEST_SIDES = {"Abby MacPherson":"Ed","Alex Aughterson":"Ed","Alex Macpherson":"Ed","Ashlea McKee":"Ed","Becca Stapleton":"Ed","Ben Aughterson":"Ed","Cameron Aughterson":"Ed","Catherine Critchley":"Ed","Chloe Giles":"Ed","Chris Murphy":"Ed","Christopher de Souza":"Ed","Dalya Kurer":"Ed","Dave Biggs":"Ed","David Mafullul":"Ed","Ed Kirwan":"Ed","Edward Stapleton":"Ed","Elliot Greenwood":"Ed","Emily Cleaton":"Ed","Florian Coste":"Ed","George Rendall":"Ed","George Stapleton":"Ed","Georgina Chamberlain":"Ed","Grace Gleave":"Ed","Hannah Kirwan":"Ed","Harry Wilson":"Ed","Isabel Aughterson":"Ed","Isobel Fleming":"Ed","Isobel Sherman":"Ed","James Aughterson":"Ed","James Chamberlain":"Ed","James Sherman":"Ed","James West":"Ed","Jeremy Talbot":"Ed","Jess Biggs":"Ed","Lauriane Flais":"Ed","Liz Stapleton":"Ed","Marcus Stapleton":"Ed","Mark Stapleton":"Ed","Matthew Houlden":"Ed","Meaghan Coffey":"Ed","Oliver Parsons":"Ed","Oluwasayo Sogbesan":"Ed","Peter Critchley":"Ed","Polly Kilford":"Ed","Robin Irvine":"Ed","Rosanna Talbot":"Ed","Rupert Giles":"Ed","Shruti Ayyar":"Ed","Sophie Kekwick":"Ed","Stephi Stapleton Barnes":"Ed","Tom Kilford":"Ed","Tom Stevens":"Ed","Adrian Linney":"Laura","Alasdair McCrone":"Laura","Alex Rattan":"Laura","Amy Pavlis":"Laura","Andrew Harford":"Laura","Anna Cooke":"Laura","Baldo Tranchina":"Laura","Brenda Harford":"Laura","Calum Walker":"Laura","Carlos Mandeville":"Laura","Chang-In Jung":"Laura","Chloe Rosenthal":"Laura","Christine Deacon":"Laura","Ciarán Martin":"Laura","Craig Ridley":"Laura","Daniel Harford":"Laura","Deborah Hanson":"Laura","Emily Phillips":"Laura","Fionan Walsh":"Laura","Georgia Prendergast":"Laura","Hannah Lear":"Laura","Hugh Harding":"Laura","Jack Barratt":"Laura","James Bodger":"Laura","James Harford":"Laura","Jasmine Law":"Laura","Jeremy Lee":"Laura","Jess Findlay":"Laura","Joe Riley":"Laura","Julie Howell":"Laura","Kassie Bretherton":"Laura","Kate Harford":"Laura","Katie Armour":"Laura","Kaz Bridges":"Laura","Kirsty Macintosh":"Laura","Laura Harford":"Laura","Malcolm Harford":"Laura","Martin McNulty":"Laura","Maya Kadirgamar":"Laura","Megan Ridley":"Laura","Molly Daly":"Laura","Ned Smith":"Laura","Nic Wells":"Laura","Nicholas Mann":"Laura","Nick Harford":"Laura","Nina Selmer":"Laura","Peter Harford":"Laura","Philippa Nicholson":"Laura","Rick Deacon":"Laura","Sammy Lee":"Laura","Scott Stacey":"Laura","Stephen Bridges":"Laura","Stephen Tate":"Laura","Thomas Wilson":"Laura","Toni Walsh":"Laura","Tracy Harford-Li":"Laura","Meg West":"Laura, Ed","Tobi Owens":"Laura, Ed"};
+
+  // Static gender lookup, same sourcing/maintenance model as GUEST_SIDES above
+  // (cross-referenced once against the Guestlist tab's Gender column). Used to
+  // render the small M/F corner badge in the table planner, for boy-girl
+  // seating patterns. Two guestlist rows (Liz & Mark Stapleton) had their
+  // Gender column visibly swapped in the source sheet - corrected here to
+  // match reality (Liz is Ed's mother, Mark his father).
+  var GUEST_GENDERS = {"Abby MacPherson":"F","Alex Aughterson":"F","Alex Macpherson":"M","Ashlea McKee":"F","Becca Stapleton":"F","Ben Aughterson":"M","Cameron Aughterson":"M","Catherine Critchley":"F","Chloe Giles":"F","Chris Murphy":"M","Christopher de Souza":"M","Dalya Kurer":"F","Dave Biggs":"M","David Mafullul":"M","Ed Kirwan":"M","Edward Stapleton":"M","Elliot Greenwood":"M","Emily Cleaton":"F","Florian Coste":"M","George Rendall":"M","George Stapleton":"M","Georgina Chamberlain":"F","Grace Gleave":"F","Hannah Kirwan":"F","Harry Wilson":"M","Isabel Aughterson":"F","Isobel Fleming":"F","Isobel Sherman":"F","James Aughterson":"M","James Chamberlain":"M","James Sherman":"M","James West":"M","Jeremy Talbot":"M","Jess Biggs":"F","Lauriane Flais":"F","Liz Stapleton":"F","Marcus Stapleton":"M","Mark Stapleton":"M","Matthew Houlden":"M","Meaghan Coffey":"F","Oliver Parsons":"M","Oluwasayo Sogbesan":"M","Peter Critchley":"M","Polly Kilford":"F","Robin Irvine":"M","Rosanna Talbot":"F","Rupert Giles":"M","Shruti Ayyar":"F","Sophie Kekwick":"F","Stephi Stapleton Barnes":"F","Tom Kilford":"M","Tom Stevens":"M","Adrian Linney":"M","Alasdair McCrone":"M","Alex Rattan":"M","Amy Pavlis":"F","Andrew Harford":"M","Anna Cooke":"F","Baldo Tranchina":"M","Brenda Harford":"F","Calum Walker":"M","Carlos Mandeville":"M","Chang-In Jung":"F","Chloe Rosenthal":"F","Christine Deacon":"F","Ciarán Martin":"M","Craig Ridley":"M","Daniel Harford":"M","Deborah Hanson":"F","Emily Phillips":"F","Fionan Walsh":"M","Georgia Prendergast":"F","Hannah Lear":"F","Hugh Harding":"M","Jack Barratt":"M","James Bodger":"M","James Harford":"M","Jasmine Law":"F","Jeremy Lee":"M","Jess Findlay":"F","Joe Riley":"M","Julie Howell":"F","Kassie Bretherton":"F","Kate Harford":"F","Katie Armour":"F","Kaz Bridges":"F","Kirsty Macintosh":"F","Laura Harford":"F","Malcolm Harford":"M","Martin McNulty":"M","Maya Kadirgamar":"F","Megan Ridley":"F","Molly Daly":"F","Ned Smith":"M","Nic Wells":"M","Nicholas Mann":"M","Nick Harford":"M","Nina Selmer":"F","Peter Harford":"M","Philippa Nicholson":"F","Rick Deacon":"M","Sammy Lee":"F","Scott Stacey":"M","Stephen Bridges":"M","Stephen Tate":"M","Thomas Wilson":"M","Toni Walsh":"F","Tracy Harford-Li":"F","Meg West":"F","Tobi Owens":"M"};
 
   function ccDebounce(fn, wait){
     var t = null;
@@ -890,7 +909,7 @@
       var dietaryRaw = (g.dietary || '').trim();
       var existing = byLabel[label];
       if(!existing || (!existing.dietary && dietaryRaw)){
-        byLabel[label] = { label: label, side: GUEST_SIDES[label] || 'Both', dietary: dietaryRaw || null };
+        byLabel[label] = { label: label, side: GUEST_SIDES[label] || 'Both', dietary: dietaryRaw || null, gender: GUEST_GENDERS[label] || null };
       }
     });
     var out = Object.keys(byLabel).map(function(k){ return byLabel[k]; });
@@ -933,7 +952,7 @@
     var seatingGuests = ccBuildGuestList(payload.guests || []);
     UNCONFIRMED_GUESTS.forEach(function(u){
       var already = seatingGuests.some(function(g){ return g.label === u.label; });
-      if(!already) seatingGuests.push({ label: u.label, side: u.side, dietary: null, unconfirmed: true });
+      if(!already) seatingGuests.push({ label: u.label, side: u.side, dietary: null, gender: u.gender || null, unconfirmed: true });
     });
     seatingGuests.sort(function(a,b){ return a.label.localeCompare(b.label); });
     var cricketGuests = ccBuildGuestList(payload.guests || [], 'cricket_attendance');
@@ -1076,6 +1095,12 @@
       }
       el.draggable = true;
       el.textContent = g.label;
+      if(g.gender === 'M' || g.gender === 'F'){
+        var badge = document.createElement('span');
+        badge.className = 'gender-badge';
+        badge.textContent = g.gender;
+        el.appendChild(badge);
+      }
       var x = document.createElement('span');
       x.className = 'unseat';
       x.textContent = '×';
@@ -1146,7 +1171,15 @@
       var chip = document.createElement('div');
       chip.className = 'chip ' + sideClass(g.side) + (g.unconfirmed ? ' unconfirmed' : '');
       chip.draggable = true;
-      chip.textContent = g.label;
+      if(g.gender === 'M' || g.gender === 'F'){
+        var genderBadge = document.createElement('span');
+        genderBadge.className = 'gender-badge';
+        genderBadge.textContent = g.gender;
+        chip.appendChild(genderBadge);
+      }
+      var labelEl = document.createElement('span');
+      labelEl.textContent = g.label;
+      chip.appendChild(labelEl);
       if(g.unconfirmed){
         chip.title = "Hasn't RSVP'd yet — seat on the assumption they're coming";
       }
