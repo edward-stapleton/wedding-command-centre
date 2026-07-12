@@ -152,6 +152,7 @@
   .chip.side-ed{border-left-color:var(--accent);}
   .chip.side-laura{border-left-color:var(--laura);}
   .chip.side-both{border-left-image:linear-gradient(var(--accent),var(--laura)) 1;}
+  .chip.unconfirmed{opacity:.6;border-style:dashed;}
   .chip .diet-mark{margin-left:auto;color:var(--gold);font-weight:700;font-size:0.9rem;}
 
   .venue{
@@ -192,6 +193,7 @@
   .seat.filled.side-ed{background:var(--accent);}
   .seat.filled.side-laura{background:var(--laura);}
   .seat.filled.side-both{background:linear-gradient(135deg,var(--accent) 50%,var(--laura) 50%);}
+  .seat.filled.unconfirmed{opacity:.6;background-image:repeating-linear-gradient(135deg, rgba(255,255,255,0.45) 0 5px, transparent 5px 10px);}
   .seat .unseat{
     position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;
     background:var(--ink);color:#fff;font-size:0.6rem;line-height:16px;text-align:center;
@@ -520,6 +522,7 @@
       <span><span class="dot" style="background:var(--laura)"></span>Laura's</span>
       <span><span class="dot" style="background:linear-gradient(135deg,var(--accent) 50%,var(--laura) 50%)"></span>Both</span>
       <span><span class="gold" style="color:var(--gold);font-weight:700;">*</span> dietary note on file</span>
+      <span><span class="dot" style="background:var(--accent);opacity:.6;background-image:repeating-linear-gradient(135deg, rgba(255,255,255,0.45) 0 3px, transparent 3px 6px);"></span>Hasn't RSVP'd yet — seated on assumption</span>
     </span>
     <span class="plan-count" id="planCount">— seated</span>
     <button class="plan-reset" id="planReset" type="button">Reset layout</button>
@@ -835,6 +838,18 @@
   // Guestlist tab's nicknames vs the Supabase RSVP full names. Side essentially
   // never changes post-invite, so this stays baked in; attendance, cricket
   // attendance and dietary notes are fetched live below.
+  // Guests Ed has personally chased but who haven't RSVP'd in Supabase yet.
+  // Seated provisionally on the assumption they're coming; rendered with a
+  // hatched/dashed "unconfirmed" style. Once a real RSVP row appears for a
+  // matching name, ccApplyData below skips the placeholder automatically.
+  var UNCONFIRMED_GUESTS = [
+    {label:'Nicola Gould', side:'Ed'},
+    {label:'Doug Gould', side:'Ed'},
+    {label:'Kirsty Kenney', side:'Ed'},
+    {label:"Al (Kirsty K's +1)", side:'Ed'},
+    {label:'Anne Jebara', side:'Ed'}
+  ];
+
   var GUEST_SIDES = {"Abby MacPherson":"Ed","Alex Aughterson":"Ed","Alex Macpherson":"Ed","Ashlea McKee":"Ed","Becca Stapleton":"Ed","Ben Aughterson":"Ed","Cameron Aughterson":"Ed","Catherine Critchley":"Ed","Chloe Giles":"Ed","Chris Murphy":"Ed","Christopher de Souza":"Ed","Dalya Kurer":"Ed","Dave Biggs":"Ed","David Mafullul":"Ed","Ed Kirwan":"Ed","Edward Stapleton":"Ed","Elliot Greenwood":"Ed","Emily Cleaton":"Ed","Florian Coste":"Ed","George Rendall":"Ed","George Stapleton":"Ed","Georgina Chamberlain":"Ed","Grace Gleave":"Ed","Hannah Kirwan":"Ed","Harry Wilson":"Ed","Isabel Aughterson":"Ed","Isobel Fleming":"Ed","Isobel Sherman":"Ed","James Aughterson":"Ed","James Chamberlain":"Ed","James Sherman":"Ed","James West":"Ed","Jeremy Talbot":"Ed","Jess Biggs":"Ed","Lauriane Flais":"Ed","Liz Stapleton":"Ed","Marcus Stapleton":"Ed","Mark Stapleton":"Ed","Matthew Houlden":"Ed","Meaghan Coffey":"Ed","Oliver Parsons":"Ed","Oluwasayo Sogbesan":"Ed","Peter Critchley":"Ed","Polly Kilford":"Ed","Robin Irvine":"Ed","Rosanna Talbot":"Ed","Rupert Giles":"Ed","Shruti Ayyar":"Ed","Sophie Kekwick":"Ed","Stephi Stapleton Barnes":"Ed","Tom Kilford":"Ed","Tom Stevens":"Ed","Adrian Linney":"Laura","Alasdair McCrone":"Laura","Alex Rattan":"Laura","Amy Pavlis":"Laura","Andrew Harford":"Laura","Anna Cooke":"Laura","Baldo Tranchina":"Laura","Brenda Harford":"Laura","Calum Walker":"Laura","Carlos Mandeville":"Laura","Chang-In Jung":"Laura","Chloe Rosenthal":"Laura","Christine Deacon":"Laura","Ciarán Martin":"Laura","Craig Ridley":"Laura","Daniel Harford":"Laura","Deborah Hanson":"Laura","Emily Phillips":"Laura","Fionan Walsh":"Laura","Georgia Prendergast":"Laura","Hannah Lear":"Laura","Hugh Harding":"Laura","Jack Barratt":"Laura","James Bodger":"Laura","James Harford":"Laura","Jasmine Law":"Laura","Jeremy Lee":"Laura","Jess Findlay":"Laura","Joe Riley":"Laura","Julie Howell":"Laura","Kassie Bretherton":"Laura","Kate Harford":"Laura","Katie Armour":"Laura","Kaz Bridges":"Laura","Kirsty Macintosh":"Laura","Laura Harford":"Laura","Malcolm Harford":"Laura","Martin McNulty":"Laura","Maya Kadirgamar":"Laura","Megan Ridley":"Laura","Molly Daly":"Laura","Ned Smith":"Laura","Nic Wells":"Laura","Nicholas Mann":"Laura","Nick Harford":"Laura","Nina Selmer":"Laura","Peter Harford":"Laura","Philippa Nicholson":"Laura","Rick Deacon":"Laura","Sammy Lee":"Laura","Scott Stacey":"Laura","Stephen Bridges":"Laura","Stephen Tate":"Laura","Thomas Wilson":"Laura","Toni Walsh":"Laura","Tracy Harford-Li":"Laura","Meg West":"Laura, Ed","Tobi Owens":"Laura, Ed"};
 
   function ccDebounce(fn, wait){
@@ -916,6 +931,11 @@
   function ccApplyData(payload, isCache){
     ccRenderOverviewStats(payload.guests || []);
     var seatingGuests = ccBuildGuestList(payload.guests || []);
+    UNCONFIRMED_GUESTS.forEach(function(u){
+      var already = seatingGuests.some(function(g){ return g.label === u.label; });
+      if(!already) seatingGuests.push({ label: u.label, side: u.side, dietary: null, unconfirmed: true });
+    });
+    seatingGuests.sort(function(a,b){ return a.label.localeCompare(b.label); });
     var cricketGuests = ccBuildGuestList(payload.guests || [], 'cricket_attendance');
     if(window.CCTablePlanner) window.CCTablePlanner.init(seatingGuests, payload.seating || {});
     if(window.CCCricketTeams) window.CCCricketTeams.init(cricketGuests, payload.cricket || {});
@@ -1042,13 +1062,18 @@
       var guestKey = seating[seatId];
       el.innerHTML = '';
       el.draggable = false;
-      el.classList.remove('filled','side-ed','side-laura','side-both');
+      el.classList.remove('filled','side-ed','side-laura','side-both','unconfirmed');
+      el.title = '';
       if(!guestKey){
         el.textContent = '';
         return;
       }
       var g = guestByKey[guestKey];
       el.classList.add('filled', sideClass(g.side));
+      if(g.unconfirmed){
+        el.classList.add('unconfirmed');
+        el.title = "Hasn't RSVP'd yet — seated on the assumption they're coming";
+      }
       el.draggable = true;
       el.textContent = g.label;
       var x = document.createElement('span');
@@ -1119,9 +1144,12 @@
 
     function makeChip(g){
       var chip = document.createElement('div');
-      chip.className = 'chip ' + sideClass(g.side);
+      chip.className = 'chip ' + sideClass(g.side) + (g.unconfirmed ? ' unconfirmed' : '');
       chip.draggable = true;
       chip.textContent = g.label;
+      if(g.unconfirmed){
+        chip.title = "Hasn't RSVP'd yet — seat on the assumption they're coming";
+      }
       if(g.dietary){
         var d = document.createElement('span');
         d.className = 'diet-mark';
