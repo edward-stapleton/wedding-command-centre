@@ -225,6 +225,11 @@
   .team-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;}
   .team-head h4{font-size:1.05rem;}
   .team-head .count{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:0.76rem;color:var(--ink-soft);background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:2px 9px;white-space:nowrap;}
+  .roster-group{margin-top:16px;border-radius:8px;transition:background .12s ease;}
+  .roster-group:first-of-type{margin-top:0;}
+  .roster-group.drag-over{background:var(--accent-soft);}
+  .roster-group-label{font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;padding:8px 4px 6px;border-top:1px dashed var(--line-strong);}
+  .roster-group:first-of-type .roster-group-label{border-top:none;padding-top:0;}
   .team-list{display:flex;flex-direction:column;gap:0;min-height:44px;list-style:none;margin:0;padding:0;counter-reset:roster;}
   .team-empty{font-size:0.8rem;color:var(--ink-soft);font-style:italic;padding:6px 2px;}
 
@@ -600,7 +605,7 @@
     <h2>Cricket Teams</h2>
     <span class="section-tag">Friday 21 Aug · Balliol College · England vs Australia &amp; Friends</span>
   </div>
-  <div class="plan-note">Only guests who've RSVP'd yes to both the wedding and the Friday cricket day are eligible — drag names from the pool onto a team. Drag a player onto another player within a team to reorder them, or drag them back onto the pool (or use the × next to their name) to unassign. Once on a team, tap Kit / Captain / WK to tag their role — a player can hold more than one. Saves automatically in this browser.</div>
+  <div class="plan-note">Only guests who've RSVP'd yes to both the wedding and the Friday cricket day are eligible — drag names from the pool onto a team's Full Game, Some Overs, or Short Shift section (dropping anywhere else in a team defaults to Full Game). Drag a player onto another player to reorder them or move them between sections/teams, or drag them back onto the pool (or use the × next to their name) to unassign. Once on a team, tap Kit / Captain / WK to tag their role — a player can hold more than one. Saves automatically in this browser.</div>
 
   <div class="plan-toolbar">
     <input type="text" class="plan-search" id="cricketSearch" placeholder="Search unassigned players…" autocomplete="off">
@@ -621,11 +626,33 @@
   <div class="cricket-teams">
     <div class="team-panel" id="teamEngland" data-team="england">
       <div class="team-head"><h4>England</h4><span class="count" id="countEngland">0</span></div>
-      <div class="team-list" id="listEngland"></div>
+      <div class="roster-group" id="groupEnglandFull">
+        <div class="roster-group-label">Full Game</div>
+        <div class="team-list" id="listEnglandFull"></div>
+      </div>
+      <div class="roster-group" id="groupEnglandSome">
+        <div class="roster-group-label">Some Overs</div>
+        <div class="team-list" id="listEnglandSome"></div>
+      </div>
+      <div class="roster-group" id="groupEnglandShort">
+        <div class="roster-group-label">Short Shift</div>
+        <div class="team-list" id="listEnglandShort"></div>
+      </div>
     </div>
     <div class="team-panel" id="teamAustralia" data-team="australia">
       <div class="team-head"><h4>Australia &amp; Friends</h4><span class="count" id="countAustralia">0</span></div>
-      <div class="team-list" id="listAustralia"></div>
+      <div class="roster-group" id="groupAustraliaFull">
+        <div class="roster-group-label">Full Game</div>
+        <div class="team-list" id="listAustraliaFull"></div>
+      </div>
+      <div class="roster-group" id="groupAustraliaSome">
+        <div class="roster-group-label">Some Overs</div>
+        <div class="team-list" id="listAustraliaSome"></div>
+      </div>
+      <div class="roster-group" id="groupAustraliaShort">
+        <div class="roster-group-label">Short Shift</div>
+        <div class="team-list" id="listAustraliaShort"></div>
+      </div>
     </div>
   </div>
 </section>
@@ -1308,13 +1335,26 @@
       return (entry && typeof entry === 'object' && entry.roles) ? entry.roles : {};
     }
 
+    var DURATION_KEYS = ['full', 'some', 'short'];
+
+    function durationOf(entry){
+      var d = entry && typeof entry === 'object' ? entry.duration : null;
+      return DURATION_KEYS.indexOf(d) !== -1 ? d : 'full';
+    }
+
     function orderOf(entry){
       return (entry && typeof entry === 'object' && typeof entry.order === 'number') ? entry.order : Infinity;
     }
 
-    function teamMembersOrdered(teamKey){
+    // A "segment" is a (team, duration) pair - e.g. england+full, australia+short.
+    // Order is scoped per segment so each of the four lists numbers cleanly
+    // from 1, independent of the other three.
+    function segmentMembersOrdered(teamKey, duration){
       return CRICKET_GUESTS
-        .filter(function(g){ return teamOf(assignment[g.label]) === teamKey; })
+        .filter(function(g){
+          var e = assignment[g.label];
+          return teamOf(e) === teamKey && durationOf(e) === duration;
+        })
         .slice()
         .sort(function(a, b){
           var oa = orderOf(assignment[a.label]), ob = orderOf(assignment[b.label]);
@@ -1323,19 +1363,37 @@
         });
     }
 
-    // Assigns label to teamKey, inserting it immediately before beforeLabel
-    // in that team's order (or at the end if beforeLabel is falsy), then
-    // renumbers the whole team 0..n so order stays a clean dense sequence.
-    function insertPlayer(label, teamKey, beforeLabel){
-      var order = teamMembersOrdered(teamKey).map(function(g){ return g.label; });
+    function renumberSegment(teamKey, duration){
+      segmentMembersOrdered(teamKey, duration).forEach(function(g, i){
+        assignment[g.label].order = i;
+      });
+    }
+
+    // Assigns label to the (teamKey, duration) segment, inserting it
+    // immediately before beforeLabel (or at the end if beforeLabel is
+    // falsy), then renumbers that segment 0..n. If the player is moving out
+    // of a different segment, that old segment gets renumbered too so its
+    // order stays dense.
+    function insertPlayer(label, teamKey, duration, beforeLabel){
+      var oldEntry = assignment[label];
+      var oldTeam = teamOf(oldEntry);
+      var oldDuration = oldTeam ? durationOf(oldEntry) : null;
+
+      var order = segmentMembersOrdered(teamKey, duration).map(function(g){ return g.label; });
       order = order.filter(function(l){ return l !== label; });
       var idx = beforeLabel ? order.indexOf(beforeLabel) : -1;
       if(idx === -1){ order.push(label); } else { order.splice(idx, 0, label); }
-      var existingRoles = rolesOf(assignment[label]);
+
+      var existingRoles = rolesOf(oldEntry);
       order.forEach(function(l, i){
         var roles = (l === label) ? existingRoles : rolesOf(assignment[l]);
-        assignment[l] = { team: teamKey, roles: roles, order: i };
+        assignment[l] = { team: teamKey, duration: duration, roles: roles, order: i };
       });
+
+      if(oldTeam && (oldTeam !== teamKey || oldDuration !== duration)){
+        renumberSegment(oldTeam, oldDuration);
+      }
+
       saveAssignment();
       renderAll();
     }
@@ -1373,7 +1431,17 @@
       return chip;
     }
 
-    function makeRosterItem(g, teamKey){
+    function unassign(label){
+      var oldEntry = assignment[label];
+      var oldTeam = teamOf(oldEntry);
+      var oldDuration = oldTeam ? durationOf(oldEntry) : null;
+      delete assignment[label];
+      if(oldTeam) renumberSegment(oldTeam, oldDuration);
+      saveAssignment();
+      renderAll();
+    }
+
+    function makeRosterItem(g, teamKey, duration){
       var li = document.createElement('div');
       li.className = 'roster-item ' + sideClass(g.side);
       li.draggable = true;
@@ -1419,9 +1487,7 @@
       x.title = 'Unassign ' + g.label;
       x.addEventListener('click', function(e){
         e.stopPropagation();
-        delete assignment[g.label];
-        saveAssignment();
-        renderAll();
+        unassign(g.label);
       });
       li.appendChild(x);
 
@@ -1432,9 +1498,11 @@
       li.addEventListener('dragend', function(){ li.classList.remove('dragging'); });
 
       // Dropping another player directly on this row reorders/inserts them
-      // just above it (within this team, or moving in from another team/the
-      // pool). stopPropagation so the team-panel's own drop handler (which
-      // appends to the end) doesn't also fire for the same drop.
+      // just above it, adopting this row's segment (team + duration) -
+      // whether that's a reorder within the same segment or a move in from
+      // another segment/team/the pool. stopPropagation so the roster-group's
+      // own drop handler (which appends to the end of the segment) doesn't
+      // also fire for the same drop.
       li.addEventListener('dragover', function(e){
         e.preventDefault();
         e.stopPropagation();
@@ -1447,7 +1515,7 @@
         li.classList.remove('drop-target');
         var label = e.dataTransfer.getData('text/plain');
         if(!label || !guestByLabel[label] || label === g.label) return;
-        insertPlayer(label, teamKey, g.label);
+        insertPlayer(label, teamKey, duration, g.label);
       });
       return li;
     }
@@ -1468,35 +1536,44 @@
       }
     }
 
-    function renderTeam(teamKey, listElId, countElId){
+    function renderSegment(teamKey, duration, listElId){
       var listEl = document.getElementById(listElId);
       listEl.innerHTML = '';
-      var members = teamMembersOrdered(teamKey);
+      var members = segmentMembersOrdered(teamKey, duration);
       if(members.length === 0){
         var empty = document.createElement('div');
         empty.className = 'team-empty';
         empty.textContent = 'Drag players here.';
         listEl.appendChild(empty);
       } else {
-        members.forEach(function(g){ listEl.appendChild(makeRosterItem(g, teamKey)); });
+        members.forEach(function(g){ listEl.appendChild(makeRosterItem(g, teamKey, duration)); });
       }
-      document.getElementById(countElId).textContent = members.length;
+      return members.length;
+    }
+
+    function renderTeam(teamKey, listElIds, countElId){
+      var total = 0;
+      DURATION_KEYS.forEach(function(duration, i){
+        total += renderSegment(teamKey, duration, listElIds[i]);
+      });
+      document.getElementById(countElId).textContent = total;
     }
 
     function renderAll(){
       renderPool();
-      renderTeam('england', 'listEngland', 'countEngland');
-      renderTeam('australia', 'listAustralia', 'countAustralia');
+      renderTeam('england', ['listEnglandFull', 'listEnglandSome', 'listEnglandShort'], 'countEngland');
+      renderTeam('australia', ['listAustraliaFull', 'listAustraliaSome', 'listAustraliaShort'], 'countAustralia');
       var total = CRICKET_GUESTS.length;
       var assigned = Object.keys(assignment).length;
       document.getElementById('cricketCount').textContent = assigned + ' / ' + total + ' assigned';
     }
 
     function wireDropTarget(el, onDrop){
-      el.addEventListener('dragover', function(e){ e.preventDefault(); el.classList.add('drag-over'); });
+      el.addEventListener('dragover', function(e){ e.preventDefault(); e.stopPropagation(); el.classList.add('drag-over'); });
       el.addEventListener('dragleave', function(){ el.classList.remove('drag-over'); });
       el.addEventListener('drop', function(e){
         e.preventDefault();
+        e.stopPropagation();
         el.classList.remove('drag-over');
         var label = e.dataTransfer.getData('text/plain');
         if(!label || !guestByLabel[label]) return;
@@ -1504,19 +1581,32 @@
       });
     }
 
+    var DURATION_ID_PART = { full: 'Full', some: 'Some', short: 'Short' };
+    var TEAM_ID_PART = { england: 'England', australia: 'Australia' };
+
     function wireOnce(){
       if(built) return;
       built = true;
+      // Panel-level fallback: dropping anywhere in a team's panel that isn't
+      // one of its three roster-group zones below defaults to "Full Game".
+      // The roster-group/roster-item handlers stopPropagation, so this only
+      // fires for drops that miss all three specific zones.
       wireDropTarget(document.getElementById('teamEngland'), function(label){
-        insertPlayer(label, 'england', null);
+        insertPlayer(label, 'england', 'full', null);
       });
       wireDropTarget(document.getElementById('teamAustralia'), function(label){
-        insertPlayer(label, 'australia', null);
+        insertPlayer(label, 'australia', 'full', null);
+      });
+      ['england', 'australia'].forEach(function(teamKey){
+        DURATION_KEYS.forEach(function(duration){
+          var groupId = 'group' + TEAM_ID_PART[teamKey] + DURATION_ID_PART[duration];
+          wireDropTarget(document.getElementById(groupId), function(label){
+            insertPlayer(label, teamKey, duration, null);
+          });
+        });
       });
       wireDropTarget(document.getElementById('cricketPoolList'), function(label){
-        delete assignment[label];
-        saveAssignment();
-        renderAll();
+        unassign(label);
       });
       document.getElementById('cricketSearch').addEventListener('input', renderPool);
       document.getElementById('cricketReset').addEventListener('click', function(){
@@ -1540,24 +1630,31 @@
           if(typeof v === 'object' && v && v.roles){
             ROLE_KEYS.forEach(function(k){ if(v.roles[k]) roles[k] = true; });
           }
+          var duration = (typeof v === 'object' && v && DURATION_KEYS.indexOf(v.duration) !== -1) ? v.duration : 'full';
           var order = (typeof v === 'object' && v && typeof v.order === 'number') ? v.order : null;
-          clean[label] = { team: team, roles: roles, order: order };
+          clean[label] = { team: team, duration: duration, roles: roles, order: order };
         });
-        // Renumber each team to a clean dense 0..n sequence. Entries that
-        // already had an order (from a previous save) sort by that; entries
-        // upgrading from the pre-ordering data shape (order === null) fall
-        // back to alphabetical, so the very first load after this feature
-        // shipped doesn't visually shuffle anyone.
+        // Renumber each (team, duration) segment to a clean dense 0..n
+        // sequence. Entries that already had an order (from a previous save)
+        // sort by that; entries upgrading from the pre-ordering data shape
+        // (order === null) fall back to alphabetical, so the very first load
+        // after this feature shipped doesn't visually shuffle anyone. Every
+        // pre-existing entry predates the Full/Some/Short split too and
+        // defaults to 'full' above, which is the common case.
         ['england', 'australia'].forEach(function(teamKey){
-          var labels = Object.keys(clean).filter(function(l){ return clean[l].team === teamKey; });
-          labels.sort(function(a, b){
-            var oa = clean[a].order, ob = clean[b].order;
-            if(oa !== null && ob !== null) return oa - ob;
-            if(oa !== null) return -1;
-            if(ob !== null) return 1;
-            return a.localeCompare(b);
+          DURATION_KEYS.forEach(function(duration){
+            var labels = Object.keys(clean).filter(function(l){
+              return clean[l].team === teamKey && clean[l].duration === duration;
+            });
+            labels.sort(function(a, b){
+              var oa = clean[a].order, ob = clean[b].order;
+              if(oa !== null && ob !== null) return oa - ob;
+              if(oa !== null) return -1;
+              if(ob !== null) return 1;
+              return a.localeCompare(b);
+            });
+            labels.forEach(function(l, i){ clean[l].order = i; });
           });
-          labels.forEach(function(l, i){ clean[l].order = i; });
         });
         assignment = clean;
         wireOnce();
