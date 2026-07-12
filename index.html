@@ -19,6 +19,8 @@
     --gold-soft:#F1E7CB;
     --laura:#7A4B6B;
     --laura-soft:#EDE1E8;
+    --accent-female:#A7C39F;
+    --laura-female:#CBA3BC;
     --line:#D8D2BE;
     --line-strong:#C3BCA3;
     --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
@@ -152,8 +154,19 @@
   .chip.side-ed{border-left-color:var(--accent);}
   .chip.side-laura{border-left-color:var(--laura);}
   .chip.side-both{border-left-image:linear-gradient(var(--accent),var(--laura)) 1;}
-  .chip.unconfirmed{opacity:.6;border-style:dashed;}
+  .chip.unconfirmed{opacity:.6;}
   .chip .diet-mark{margin-left:auto;color:var(--gold);font-weight:700;font-size:0.9rem;}
+
+  /* Table planner pool: fill chips solid by side, shaded light/dark by gender
+     (dark = male, light = female) so the pool previews the same encoding as
+     the seats below. Scoped to #poolList so cricket's chips are untouched. */
+  #poolList .chip{border-left:none;color:#fff;}
+  #poolList .chip.side-ed{background:var(--accent);}
+  #poolList .chip.side-laura{background:var(--laura);}
+  #poolList .chip.side-both{background:linear-gradient(135deg,var(--accent) 50%,var(--laura) 50%);}
+  #poolList .chip.gender-f.side-ed{background:var(--accent-female);color:var(--ink);}
+  #poolList .chip.gender-f.side-laura{background:var(--laura-female);color:var(--ink);}
+  #poolList .chip.gender-f.side-both{background:linear-gradient(135deg,var(--accent-female) 50%,var(--laura-female) 50%);color:var(--ink);}
 
   .venue{
     background:var(--paper-raised);border:1px solid var(--line);border-radius:14px;
@@ -193,23 +206,16 @@
   .seat.filled.side-ed{background:var(--accent);}
   .seat.filled.side-laura{background:var(--laura);}
   .seat.filled.side-both{background:linear-gradient(135deg,var(--accent) 50%,var(--laura) 50%);}
-  .seat.filled.unconfirmed{opacity:.6;background-image:repeating-linear-gradient(135deg, rgba(255,255,255,0.45) 0 5px, transparent 5px 10px);}
+  .seat.filled.gender-f.side-ed{background:var(--accent-female);color:var(--ink);}
+  .seat.filled.gender-f.side-laura{background:var(--laura-female);color:var(--ink);}
+  .seat.filled.gender-f.side-both{background:linear-gradient(135deg,var(--accent-female) 50%,var(--laura-female) 50%);color:var(--ink);}
+  .seat.filled.unconfirmed{opacity:.6;}
   .seat .unseat{
     position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;
     background:var(--ink);color:#fff;font-size:0.6rem;line-height:16px;text-align:center;
     cursor:pointer;opacity:0;transition:opacity .12s ease;
   }
   .seat.filled:hover .unseat{opacity:1;}
-  .seat .gender-badge{
-    position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;
-    background:#fff;color:var(--ink);font-size:0.52rem;font-weight:800;line-height:13px;text-align:center;
-    box-shadow:0 0 0 1px var(--line-strong);pointer-events:none;
-  }
-  .chip .gender-badge{
-    flex:0 0 auto;width:15px;height:15px;border-radius:50%;background:var(--paper);
-    border:1px solid var(--line-strong);color:var(--ink-soft);font-size:0.6rem;font-weight:800;
-    line-height:13px;text-align:center;
-  }
 
   /* ---------- Cricket teams ---------- */
   .cricket-teams{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
@@ -531,9 +537,10 @@
       <span><span class="dot" style="background:var(--accent)"></span>Ed's</span>
       <span><span class="dot" style="background:var(--laura)"></span>Laura's</span>
       <span><span class="dot" style="background:linear-gradient(135deg,var(--accent) 50%,var(--laura) 50%)"></span>Both</span>
+      <span><span class="dot" style="background:var(--accent)"></span>Darker = male</span>
+      <span><span class="dot" style="background:var(--accent-female)"></span>Lighter = female</span>
       <span><span class="gold" style="color:var(--gold);font-weight:700;">*</span> dietary note on file</span>
-      <span><span class="dot" style="background:var(--accent);opacity:.6;background-image:repeating-linear-gradient(135deg, rgba(255,255,255,0.45) 0 3px, transparent 3px 6px);"></span>Hasn't RSVP'd yet — seated on assumption</span>
-      <span><span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px var(--line-strong);font-size:0.58rem;font-weight:800;line-height:14px;text-align:center;vertical-align:-2px;margin-right:5px;">M</span>/<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px var(--line-strong);font-size:0.58rem;font-weight:800;line-height:14px;text-align:center;vertical-align:-2px;margin:0 5px;">F</span> gender badge, for boy/girl seating</span>
+      <span><span class="dot" style="background:var(--accent);opacity:.6;"></span>Faded = hasn't RSVP'd yet, seated on assumption</span>
     </span>
     <span class="plan-count" id="planCount">— seated</span>
     <button class="plan-reset" id="planReset" type="button">Reset layout</button>
@@ -1081,7 +1088,7 @@
       var guestKey = seating[seatId];
       el.innerHTML = '';
       el.draggable = false;
-      el.classList.remove('filled','side-ed','side-laura','side-both','unconfirmed');
+      el.classList.remove('filled','side-ed','side-laura','side-both','gender-f','unconfirmed');
       el.title = '';
       if(!guestKey){
         el.textContent = '';
@@ -1089,18 +1096,13 @@
       }
       var g = guestByKey[guestKey];
       el.classList.add('filled', sideClass(g.side));
+      if(g.gender === 'F') el.classList.add('gender-f');
       if(g.unconfirmed){
         el.classList.add('unconfirmed');
         el.title = "Hasn't RSVP'd yet — seated on the assumption they're coming";
       }
       el.draggable = true;
       el.textContent = g.label;
-      if(g.gender === 'M' || g.gender === 'F'){
-        var badge = document.createElement('span');
-        badge.className = 'gender-badge';
-        badge.textContent = g.gender;
-        el.appendChild(badge);
-      }
       var x = document.createElement('span');
       x.className = 'unseat';
       x.textContent = '×';
@@ -1169,17 +1171,9 @@
 
     function makeChip(g){
       var chip = document.createElement('div');
-      chip.className = 'chip ' + sideClass(g.side) + (g.unconfirmed ? ' unconfirmed' : '');
+      chip.className = 'chip ' + sideClass(g.side) + (g.gender === 'F' ? ' gender-f' : '') + (g.unconfirmed ? ' unconfirmed' : '');
       chip.draggable = true;
-      if(g.gender === 'M' || g.gender === 'F'){
-        var genderBadge = document.createElement('span');
-        genderBadge.className = 'gender-badge';
-        genderBadge.textContent = g.gender;
-        chip.appendChild(genderBadge);
-      }
-      var labelEl = document.createElement('span');
-      labelEl.textContent = g.label;
-      chip.appendChild(labelEl);
+      chip.textContent = g.label;
       if(g.unconfirmed){
         chip.title = "Hasn't RSVP'd yet — seat on the assumption they're coming";
       }
