@@ -225,8 +225,35 @@
   .team-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;}
   .team-head h4{font-size:1.05rem;}
   .team-head .count{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:0.76rem;color:var(--ink-soft);background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:2px 9px;white-space:nowrap;}
-  .team-list{display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px;min-height:44px;}
+  .team-list{display:flex;flex-direction:column;gap:0;min-height:44px;list-style:none;margin:0;padding:0;counter-reset:roster;}
   .team-empty{font-size:0.8rem;color:var(--ink-soft);font-style:italic;padding:6px 2px;}
+
+  .roster-item{
+    display:flex;align-items:center;gap:10px;padding:8px 4px;
+    border-bottom:1px solid var(--line);counter-increment:roster;
+  }
+  .roster-item:last-child{border-bottom:none;}
+  .roster-item .roster-num{
+    font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink-soft);
+    font-size:0.78rem;width:1.6em;flex:0 0 auto;text-align:right;
+  }
+  .roster-item .roster-num::before{content:counter(roster) ".";}
+  .roster-item .roster-side{width:8px;height:8px;border-radius:50%;flex:0 0 auto;}
+  .roster-item.side-ed .roster-side{background:var(--accent);}
+  .roster-item.side-laura .roster-side{background:var(--laura);}
+  .roster-item.side-both .roster-side{background:linear-gradient(135deg,var(--accent) 50%,var(--laura) 50%);}
+  .roster-item .roster-name{flex:1 1 auto;font-size:0.88rem;cursor:grab;}
+  .roster-item.dragging{opacity:0.4;}
+  .roster-item .role-toggles{display:flex;gap:5px;flex:0 0 auto;}
+  .role-pill{
+    font:inherit;font-size:0.68rem;font-weight:600;letter-spacing:0.02em;
+    padding:3px 9px;border-radius:20px;border:1px solid var(--line-strong);
+    background:var(--paper);color:var(--ink-soft);cursor:pointer;white-space:nowrap;
+  }
+  .role-pill:hover{border-color:var(--ink-soft);}
+  .role-pill.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .roster-item .remove{color:var(--ink-soft);cursor:pointer;font-weight:700;flex:0 0 auto;padding:0 2px;}
+  .roster-item .remove:hover{color:var(--brick);}
   .chip .remove{margin-left:auto;color:var(--ink-soft);cursor:pointer;font-weight:700;padding-left:4px;}
   .chip .remove:hover{color:var(--brick);}
 
@@ -572,7 +599,7 @@
     <h2>Cricket Teams</h2>
     <span class="section-tag">Friday 21 Aug · Balliol College · England vs Australia &amp; Friends</span>
   </div>
-  <div class="plan-note">Only guests who've RSVP'd yes to both the wedding and the Friday cricket day are eligible — drag names from the pool onto a team. Drag a player back onto the pool, or use the × on their chip, to unassign them. Saves automatically in this browser.</div>
+  <div class="plan-note">Only guests who've RSVP'd yes to both the wedding and the Friday cricket day are eligible — drag names from the pool onto a team. Drag a player back onto the pool, or use the × next to their name, to unassign them. Once on a team, tap Kit / Captain / WK to tag their role — a player can hold more than one. Saves automatically in this browser.</div>
 
   <div class="plan-toolbar">
     <input type="text" class="plan-search" id="cricketSearch" placeholder="Search unassigned players…" autocomplete="off">
@@ -1257,6 +1284,8 @@
 
   // ---------- Cricket teams ----------
   window.CCCricketTeams = (function(){
+    var ROLE_KEYS = ['kit', 'captain', 'wicketkeeper'];
+    var ROLE_LABELS = { kit: 'Kit', captain: 'Captain', wicketkeeper: 'WK' };
     var CRICKET_GUESTS = [];
     var guestByLabel = {};
     var assignment = {};
@@ -1267,6 +1296,15 @@
       if(side === 'Ed') return 'side-ed';
       if(side === 'Laura') return 'side-laura';
       return 'side-both';
+    }
+
+    function teamOf(entry){
+      if(!entry) return null;
+      return typeof entry === 'object' ? entry.team : entry;
+    }
+
+    function rolesOf(entry){
+      return (entry && typeof entry === 'object' && entry.roles) ? entry.roles : {};
     }
 
     function saveAssignment(){
@@ -1302,11 +1340,71 @@
       return chip;
     }
 
+    function makeRosterItem(g){
+      var li = document.createElement('div');
+      li.className = 'roster-item ' + sideClass(g.side);
+      li.draggable = true;
+
+      var num = document.createElement('span');
+      num.className = 'roster-num';
+      li.appendChild(num);
+
+      var side = document.createElement('span');
+      side.className = 'roster-side';
+      li.appendChild(side);
+
+      var name = document.createElement('span');
+      name.className = 'roster-name';
+      name.textContent = g.label;
+      li.appendChild(name);
+
+      var toggles = document.createElement('span');
+      toggles.className = 'role-toggles';
+      var roles = rolesOf(assignment[g.label]);
+      ROLE_KEYS.forEach(function(roleKey){
+        var pill = document.createElement('button');
+        pill.type = 'button';
+        pill.className = 'role-pill' + (roles[roleKey] ? ' active' : '');
+        pill.textContent = ROLE_LABELS[roleKey];
+        if(roleKey === 'wicketkeeper') pill.title = 'Wicketkeeper';
+        pill.addEventListener('click', function(e){
+          e.stopPropagation();
+          var entry = assignment[g.label];
+          if(!entry || typeof entry !== 'object') return;
+          entry.roles = entry.roles || {};
+          entry.roles[roleKey] = !entry.roles[roleKey];
+          saveAssignment();
+          renderAll();
+        });
+        toggles.appendChild(pill);
+      });
+      li.appendChild(toggles);
+
+      var x = document.createElement('span');
+      x.className = 'remove';
+      x.textContent = '×';
+      x.title = 'Unassign ' + g.label;
+      x.addEventListener('click', function(e){
+        e.stopPropagation();
+        delete assignment[g.label];
+        saveAssignment();
+        renderAll();
+      });
+      li.appendChild(x);
+
+      li.addEventListener('dragstart', function(e){
+        e.dataTransfer.setData('text/plain', g.label);
+        li.classList.add('dragging');
+      });
+      li.addEventListener('dragend', function(){ li.classList.remove('dragging'); });
+      return li;
+    }
+
     function renderPool(){
       var list = document.getElementById('cricketPoolList');
       var q = (document.getElementById('cricketSearch').value || '').trim().toLowerCase();
       list.innerHTML = '';
-      var unassigned = CRICKET_GUESTS.filter(function(g){ return !assignment[g.label]; });
+      var unassigned = CRICKET_GUESTS.filter(function(g){ return !teamOf(assignment[g.label]); });
       if(q){ unassigned = unassigned.filter(function(g){ return g.label.toLowerCase().indexOf(q) !== -1; }); }
       if(unassigned.length === 0){
         var empty = document.createElement('div');
@@ -1321,14 +1419,14 @@
     function renderTeam(teamKey, listElId, countElId){
       var listEl = document.getElementById(listElId);
       listEl.innerHTML = '';
-      var members = CRICKET_GUESTS.filter(function(g){ return assignment[g.label] === teamKey; });
+      var members = CRICKET_GUESTS.filter(function(g){ return teamOf(assignment[g.label]) === teamKey; });
       if(members.length === 0){
         var empty = document.createElement('div');
         empty.className = 'team-empty';
         empty.textContent = 'Drag players here.';
         listEl.appendChild(empty);
       } else {
-        members.forEach(function(g){ listEl.appendChild(makeChip(g, true)); });
+        members.forEach(function(g){ listEl.appendChild(makeRosterItem(g)); });
       }
       document.getElementById(countElId).textContent = members.length;
     }
@@ -1354,18 +1452,21 @@
       });
     }
 
+    function assignTeam(label, teamKey){
+      var existingRoles = rolesOf(assignment[label]);
+      assignment[label] = { team: teamKey, roles: existingRoles };
+      saveAssignment();
+      renderAll();
+    }
+
     function wireOnce(){
       if(built) return;
       built = true;
       wireDropTarget(document.getElementById('teamEngland'), function(label){
-        assignment[label] = 'england';
-        saveAssignment();
-        renderAll();
+        assignTeam(label, 'england');
       });
       wireDropTarget(document.getElementById('teamAustralia'), function(label){
-        assignment[label] = 'australia';
-        saveAssignment();
-        renderAll();
+        assignTeam(label, 'australia');
       });
       wireDropTarget(document.getElementById('cricketPoolList'), function(label){
         delete assignment[label];
@@ -1388,7 +1489,13 @@
         var clean = {};
         Object.keys(initialAssignment || {}).forEach(function(label){
           var v = initialAssignment[label];
-          if(guestByLabel[label] && (v === 'england' || v === 'australia')) clean[label] = v;
+          var team = typeof v === 'object' && v ? v.team : v;
+          if(!guestByLabel[label] || (team !== 'england' && team !== 'australia')) return;
+          var roles = {};
+          if(typeof v === 'object' && v && v.roles){
+            ROLE_KEYS.forEach(function(k){ if(v.roles[k]) roles[k] = true; });
+          }
+          clean[label] = { team: team, roles: roles };
         });
         assignment = clean;
         wireOnce();
