@@ -996,6 +996,17 @@
     }).catch(function(err){ console.error('cc_api_post_failed', type, err); });
   }
 
+  // RSVP forms let guests type free text for dietary notes, and plenty just
+  // type a variant of "no requirements" rather than leaving it blank - those
+  // aren't real notes and shouldn't show up as one in any live-data view.
+  var DIETARY_NONE_VALUES = ['none','n/a','na','no','nil','nothing','no allergies','no allergy','no dietary requirements','no dietary requirement','no requirements','no thanks','nope'];
+  function ccDietaryNote(raw){
+    var trimmed = (raw || '').trim();
+    var normalized = trimmed.toLowerCase().replace(/[.!]+$/, '');
+    if(!trimmed || DIETARY_NONE_VALUES.indexOf(normalized) !== -1) return null;
+    return trimmed;
+  }
+
   function ccBuildGuestList(rawGuests, filterKey){
     // Some guests (e.g. a couple who are each other's plus-one) appear as two
     // separate rows under two invitation groups - dedupe by label so they
@@ -1006,7 +1017,7 @@
       if(filterKey && g[filterKey] !== 'yes') return;
       var label = ((g.first_name || '') + ' ' + (g.last_name || '')).trim();
       if(!label) return;
-      var dietaryRaw = (g.dietary || '').trim();
+      var dietaryRaw = ccDietaryNote(g.dietary);
       var existing = byLabel[label];
       if(!existing || (!existing.dietary && dietaryRaw)){
         byLabel[label] = { label: label, side: GUEST_SIDES[label] || 'Both', dietary: dietaryRaw || null, gender: GUEST_GENDERS[label] || null };
@@ -1021,7 +1032,7 @@
     var yes = rawGuests.filter(function(g){ return g.attendance === 'yes'; });
     var no = rawGuests.filter(function(g){ return g.attendance === 'no'; });
     var cricketYes = yes.filter(function(g){ return g.cricket_attendance === 'yes'; });
-    var dietaryCount = yes.filter(function(g){ return (g.dietary || '').trim(); }).length;
+    var dietaryCount = yes.filter(function(g){ return ccDietaryNote(g.dietary); }).length;
 
     var statYes = document.getElementById('statYes');
     var statCricket = document.getElementById('statCricket');
