@@ -180,8 +180,12 @@
 
   .top-table-block{display:flex;flex-direction:column;align-items:center;gap:6px;}
   .top-table-title{font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;}
-  .top-table-rig{display:flex;flex-direction:column;gap:0;width:max-content;}
+  .top-tables-row{display:flex;flex-direction:row;width:max-content;}
+  .tt-unit{display:flex;flex-direction:row;align-items:center;gap:5px;}
+  .tt-mid{display:flex;flex-direction:column;gap:0;}
   .tt-row{display:flex;gap:4px;}
+  .tt-seg{display:flex;gap:4px;padding-right:9px;margin-right:9px;border-right:1px dashed var(--line-strong);}
+  .tt-seg:last-child{border-right:none;margin-right:0;padding-right:0;}
   .tt-surface{height:10px;margin:8px 0;background:linear-gradient(90deg,var(--line-strong),var(--line-strong)) center/100% 2px no-repeat, var(--paper);border-radius:4px;}
 
   .long-tables-row{display:flex;flex-direction:row;gap:14px;align-items:flex-start;}
@@ -189,9 +193,18 @@
   .long-table-title{display:flex;flex-direction:column;align-items:center;gap:4px;margin-bottom:6px;}
   .long-table-title h4{font-size:0.86rem;}
   .long-table-title .count{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:0.7rem;color:var(--ink-soft);background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:2px 8px;}
-  .long-table-rig{display:flex;flex-direction:row;gap:3px;width:max-content;}
-  .lt-col{display:flex;flex-direction:column;gap:3px;}
+  .long-table-rig{display:flex;flex-direction:column;align-items:center;gap:5px;width:max-content;}
+  .long-table-body{display:flex;flex-direction:row;gap:3px;width:max-content;}
+  .lt-col{display:flex;flex-direction:column;gap:0;}
+  .lt-segment{display:flex;flex-direction:column;gap:3px;padding-bottom:8px;margin-bottom:8px;border-bottom:1px dashed var(--line-strong);}
+  .lt-segment:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
   .lt-surface{width:9px;margin:0 1px;background:linear-gradient(var(--line-strong),var(--line-strong)) center/2px 100% no-repeat;border-radius:4px;}
+
+  /* head-of-table seats: gold accent border marks them out from ordinary side seats */
+  .seat.head{border-color:var(--gold);border-style:solid;}
+  .seat.head:not(.filled){color:var(--gold);font-weight:600;font-size:0.62rem;letter-spacing:0.04em;text-transform:uppercase;}
+  .seat.head.filled{box-shadow:inset 0 0 0 2px var(--gold-soft);}
+  .seat-legend-head{display:inline-block;width:14px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px;border:1.5px solid var(--gold);background:var(--paper);}
 
   .seat{
     width:88px;height:36px;flex:0 0 auto;
@@ -573,7 +586,7 @@
     <h2>Table Planner</h2>
     <span class="section-tag">Interactive · marquee layout · live RSVP pool</span>
   </div>
-  <div class="plan-note">Drag a guest from the pool onto any seat. The top table sits across the head of the marquee, perpendicular to the room, with seven seats a side (14 total); the four long tables run away from it down the length of the tent, up to 30 seats each (two sides of 15). Drag a seated guest back onto the pool — or use the × that appears on hover — to unseat them. Your layout saves automatically in this browser.</div>
+  <div class="plan-note">Drag a guest from the pool onto any seat. The top table sits across the head of the marquee, delineated into two six-person tables (12 seats along the sides) plus a head seat at either far end (14 total); the four long tables run away from it down the length of the tent, each delineated into four six-person tables (24 seats along the sides) plus an optional head seat at either far end (up to 26). Drag a seated guest back onto the pool — or use the × that appears on hover — to unseat them. Your layout saves automatically in this browser.</div>
 
   <div class="plan-toolbar">
     <input type="text" class="plan-search" id="planSearch" placeholder="Search unseated guests…" autocomplete="off">
@@ -585,6 +598,7 @@
       <span><span class="dot" style="background:var(--accent-female)"></span>Lighter = female</span>
       <span><span class="gold" style="color:var(--gold);font-weight:700;">*</span> dietary note on file</span>
       <span><span class="dot" style="background:var(--accent);opacity:.6;"></span>Faded = hasn't RSVP'd yet, seated on assumption</span>
+      <span><span class="seat-legend-head"></span>Gold border = head of table</span>
     </span>
     <span class="plan-count" id="planCount">— seated</span>
     <button class="plan-reset" id="planReset" type="button">Reset layout</button>
@@ -601,7 +615,7 @@
       <div class="venue-inner">
         <div class="top-table-block">
           <div class="top-table-title">Top table · 14 seats</div>
-          <div class="top-table-rig" id="topTableRig"></div>
+          <div class="top-tables-row" id="topTablesRow"></div>
         </div>
         <div class="long-tables-row" id="longTables"></div>
       </div>
@@ -1121,18 +1135,33 @@
       return set;
     }
 
-    // ---- seat id plan: top table (14), four long tables (30 each: 15+15) ----
+    // ---- seat id plan ----
+    // Top table: one table delineated into two six-person segments across its length
+    // (3-a-side + 3-b-side per segment, 12 total) plus a head seat at either far end (14 max) -
+    // same pattern as the long tables, just two segments instead of four.
+    // Long tables: four tables, each delineated into four six-person segments down its length
+    // (3-a-side + 3-b-side per segment, 24 total) plus a head seat at either far end (26 max).
     var SEAT_IDS = [];
-    for(var i=1;i<=7;i++){ SEAT_IDS.push('tt-a'+i); }
-    for(var i=1;i<=7;i++){ SEAT_IDS.push('tt-b'+i); }
-    for(var t=1;t<=4;t++){
-      for(var i=1;i<=15;i++){ SEAT_IDS.push('lt'+t+'-a'+i); }
-      for(var i=1;i<=15;i++){ SEAT_IDS.push('lt'+t+'-b'+i); }
+    SEAT_IDS.push('tt-h1');
+    for(var s=1;s<=2;s++){
+      for(var i=1;i<=3;i++){ SEAT_IDS.push('tt-s'+s+'-a'+i); }
+      for(var i=1;i<=3;i++){ SEAT_IDS.push('tt-s'+s+'-b'+i); }
     }
+    SEAT_IDS.push('tt-h2');
+    for(var t=1;t<=4;t++){
+      SEAT_IDS.push('lt'+t+'-h1');
+      for(var s=1;s<=4;s++){
+        for(var i=1;i<=3;i++){ SEAT_IDS.push('lt'+t+'-s'+s+'-a'+i); }
+        for(var i=1;i<=3;i++){ SEAT_IDS.push('lt'+t+'-s'+s+'-b'+i); }
+      }
+      SEAT_IDS.push('lt'+t+'-h2');
+    }
+
+    function isHeadSeat(seatId){ return /-h[12]$/.test(seatId); }
 
     function makeSeatEl(seatId){
       var el = document.createElement('div');
-      el.className = 'seat';
+      el.className = 'seat' + (isHeadSeat(seatId) ? ' head' : '');
       el.dataset.seatId = seatId;
       fillSeatEl(el, seatId);
       el.addEventListener('dragover', function(e){ e.preventDefault(); el.classList.add('drag-over'); });
@@ -1161,7 +1190,7 @@
       el.classList.remove('filled','side-ed','side-laura','side-both','gender-f','unconfirmed');
       el.title = '';
       if(!guestKey){
-        el.textContent = '';
+        el.textContent = isHeadSeat(seatId) ? 'Head' : '';
         return;
       }
       var g = guestByKey[guestKey];
@@ -1193,31 +1222,56 @@
     }
 
     function buildVenue(){
-      // top table: horizontal, two rows of 7 (a row facing out, b row facing the long tables)
-      var ttRig = document.getElementById('topTableRig');
-      ttRig.innerHTML = '';
+      // top table: one table delineated into two six-person segments (3-a-side + 3-b-side
+      // each), with a head seat at either far end only - no heads at the internal join,
+      // same convention as the long tables below
+      var ttWrap = document.getElementById('topTablesRow');
+      ttWrap.innerHTML = '';
+      var unit = document.createElement('div'); unit.className = 'tt-unit';
+      var mid = document.createElement('div'); mid.className = 'tt-mid';
       var rowA = document.createElement('div'); rowA.className = 'tt-row';
       var rowB = document.createElement('div'); rowB.className = 'tt-row';
-      for(var i=1;i<=7;i++){ rowA.appendChild(makeSeatEl('tt-a'+i)); }
-      for(var i=1;i<=7;i++){ rowB.appendChild(makeSeatEl('tt-b'+i)); }
+      for(var s=1;s<=2;s++){
+        var segA = document.createElement('div'); segA.className = 'tt-seg';
+        for(var i=1;i<=3;i++){ segA.appendChild(makeSeatEl('tt-s'+s+'-a'+i)); }
+        rowA.appendChild(segA);
+        var segB = document.createElement('div'); segB.className = 'tt-seg';
+        for(var i=1;i<=3;i++){ segB.appendChild(makeSeatEl('tt-s'+s+'-b'+i)); }
+        rowB.appendChild(segB);
+      }
       var ttSurface = document.createElement('div'); ttSurface.className = 'tt-surface';
-      ttRig.appendChild(rowA); ttRig.appendChild(ttSurface); ttRig.appendChild(rowB);
+      mid.appendChild(rowA); mid.appendChild(ttSurface); mid.appendChild(rowB);
+      unit.appendChild(makeSeatEl('tt-h1'));
+      unit.appendChild(mid);
+      unit.appendChild(makeSeatEl('tt-h2'));
+      ttWrap.appendChild(unit);
 
       // long tables: four columns side by side, each running away from the top table,
-      // two sides of 15 seats stacked vertically either side of the table surface
+      // delineated into four six-person segments down its length (3-a-side + 3-b-side
+      // each), with an optional head seat at either far end
       var wrap = document.getElementById('longTables');
       wrap.innerHTML = '';
       for(var t=1;t<=4;t++){
         var block = document.createElement('div'); block.className = 'long-table-block';
         var title = document.createElement('div'); title.className = 'long-table-title';
-        title.innerHTML = '<h4>Long table ' + t + '</h4><span class="count" data-lt-count="'+t+'">0 / 30</span>';
+        title.innerHTML = '<h4>Long table ' + t + '</h4><span class="count" data-lt-count="'+t+'">0 / 26</span>';
         var rig = document.createElement('div'); rig.className = 'long-table-rig';
+        var body = document.createElement('div'); body.className = 'long-table-body';
         var colA = document.createElement('div'); colA.className = 'lt-col';
-        for(var i=1;i<=15;i++){ colA.appendChild(makeSeatEl('lt'+t+'-a'+i)); }
-        var surf = document.createElement('div'); surf.className = 'lt-surface';
         var colB = document.createElement('div'); colB.className = 'lt-col';
-        for(var i=1;i<=15;i++){ colB.appendChild(makeSeatEl('lt'+t+'-b'+i)); }
-        rig.appendChild(colA); rig.appendChild(surf); rig.appendChild(colB);
+        for(var s=1;s<=4;s++){
+          var segA = document.createElement('div'); segA.className = 'lt-segment';
+          for(var i=1;i<=3;i++){ segA.appendChild(makeSeatEl('lt'+t+'-s'+s+'-a'+i)); }
+          colA.appendChild(segA);
+          var segB = document.createElement('div'); segB.className = 'lt-segment';
+          for(var i=1;i<=3;i++){ segB.appendChild(makeSeatEl('lt'+t+'-s'+s+'-b'+i)); }
+          colB.appendChild(segB);
+        }
+        var surf = document.createElement('div'); surf.className = 'lt-surface';
+        body.appendChild(colA); body.appendChild(surf); body.appendChild(colB);
+        rig.appendChild(makeSeatEl('lt'+t+'-h1'));
+        rig.appendChild(body);
+        rig.appendChild(makeSeatEl('lt'+t+'-h2'));
         block.appendChild(title); block.appendChild(rig);
         wrap.appendChild(block);
       }
@@ -1229,13 +1283,13 @@
         if(el) fillSeatEl(el, seatId);
       });
       for(var t=1;t<=4;t++){
+        var prefix = 'lt'+t+'-';
         var n = 0;
-        for(var i=1;i<=15;i++){
-          if(seating['lt'+t+'-a'+i]) n++;
-          if(seating['lt'+t+'-b'+i]) n++;
-        }
+        Object.keys(seating).forEach(function(seatId){
+          if(seatId.indexOf(prefix) === 0) n++;
+        });
         var badge = document.querySelector('[data-lt-count="'+t+'"]');
-        if(badge) badge.textContent = n + ' / 30';
+        if(badge) badge.textContent = n + ' / 26';
       }
     }
 
