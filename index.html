@@ -864,27 +864,8 @@
   <div class="sched-scroll">
   <table class="diet">
     <thead><tr><th>Guest</th><th>Note</th></tr></thead>
-    <tbody>
-      <tr><td>Anna Cooke</td><td>Vegan</td></tr>
-      <tr><td>Laura Harford</td><td>Vegetarian</td></tr>
-      <tr><td>Shruti Ayyar</td><td>Vegetarian</td></tr>
-      <tr><td>Nina Selmer</td><td>Vegetarian</td></tr>
-      <tr><td>Hannah Lear</td><td>Vegetarian</td></tr>
-      <tr><td>Jess Findlay</td><td>Bringing 1 vegetarian guest</td></tr>
-      <tr><td>Grace Gleave</td><td>Pescatarian</td></tr>
-      <tr><td>Harry Wilson</td><td>Pescatarian</td></tr>
-      <tr><td>Emily Phillips</td><td>Pescatarian</td></tr>
-      <tr><td>Maya Kadirgamar &amp; Carlos Mandeville</td><td>Pescatarian</td></tr>
-      <tr><td>Lauriane Flais &amp; Cameron Aughterson</td><td>Pescatarian</td></tr>
-      <tr><td>George Rendall</td><td>Pine nut allergy (fine unless eaten; all other nuts OK)</td></tr>
-      <tr><td>Scott Stacey</td><td>Nut allergy</td></tr>
-      <tr><td>Jeremy Talbot</td><td>Allergic to lobster and crab</td></tr>
-      <tr><td>Chang-In Jung</td><td>Allergic to abalone</td></tr>
-      <tr><td>Katie Armour</td><td>Gluten intolerant</td></tr>
-      <tr><td>James Aughterson</td><td>Gluten free</td></tr>
-      <tr><td>Polly Kilford</td><td>Light on dairy, please</td></tr>
-      <tr><td>Craig Ridley</td><td>No cheese</td></tr>
-      <tr><td>Peter Harford</td><td>"Plenty of meat, please"</td></tr>
+    <tbody id="dietaryTableBody">
+      <tr><td colspan="2" class="print-empty-row">Loading live RSVP data…</td></tr>
     </tbody>
   </table>
   </div>
@@ -1066,9 +1047,42 @@
     if(el) el.textContent = text;
   }
 
+  // Who's Who's "Dietary requirements & allergies" table - built from the
+  // same live guest list as the table planner and stats, rather than the
+  // hand-maintained snapshot this used to be, so it can't go stale.
+  function ccRenderDietaryTable(guests){
+    var tbody = document.getElementById('dietaryTableBody');
+    if(!tbody) return;
+    var withDietary = guests.filter(function(g){ return g.dietary; })
+      .slice()
+      .sort(function(a,b){ return a.label.localeCompare(b.label); });
+    tbody.innerHTML = '';
+    if(withDietary.length === 0){
+      var empty = document.createElement('tr');
+      var td = document.createElement('td');
+      td.colSpan = 2;
+      td.className = 'print-empty-row';
+      td.textContent = 'No dietary notes on file yet';
+      empty.appendChild(td);
+      tbody.appendChild(empty);
+      return;
+    }
+    withDietary.forEach(function(g){
+      var tr = document.createElement('tr');
+      var tdName = document.createElement('td');
+      tdName.textContent = g.label;
+      var tdNote = document.createElement('td');
+      tdNote.textContent = g.dietary;
+      tr.appendChild(tdName);
+      tr.appendChild(tdNote);
+      tbody.appendChild(tr);
+    });
+  }
+
   function ccApplyData(payload, isCache){
     ccRenderOverviewStats(payload.guests || []);
     var seatingGuests = ccBuildGuestList(payload.guests || []);
+    ccRenderDietaryTable(seatingGuests);
     UNCONFIRMED_GUESTS.forEach(function(u){
       var already = seatingGuests.some(function(g){ return g.label === u.label; });
       if(!already) seatingGuests.push({ label: u.label, side: u.side, dietary: null, gender: u.gender || null, unconfirmed: true });
@@ -1098,6 +1112,8 @@
         ccApplyData(cached, true);
       } else {
         ccSetSyncStatus('connection failed — no cached copy available');
+        var tbody = document.getElementById('dietaryTableBody');
+        if(tbody) tbody.innerHTML = '<tr><td colspan="2" class="print-empty-row">Connection failed — dietary notes unavailable</td></tr>';
       }
     });
   };
