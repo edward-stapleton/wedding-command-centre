@@ -483,9 +483,10 @@
   /* Page 1: whole-room schematic, shrunk right down since no names are
      shown, so the top table and all four long tables fit on one sheet -
      same flex structure as the live venue diagram, just miniaturised. */
-  .pp-venue{display:flex;flex-direction:column;align-items:center;gap:8mm;}
-  .pp-top-table-label{font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:3px;}
+  .pp-venue{display:flex;flex-direction:column;align-items:center;}
+  .pp-top-table-label{font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:2px;}
   .pp-venue .top-tables-row,.pp-venue .long-tables-row{display:flex;justify-content:center;}
+  .pp-venue .top-tables-row{margin-bottom:8mm;}
   .pp-venue .long-tables-row{gap:6mm;}
   .pp-venue .tt-unit{display:flex;flex-direction:row;align-items:center;gap:2px;}
   .pp-venue .tt-mid{display:flex;flex-direction:column;gap:0;}
@@ -503,31 +504,37 @@
   .pp-venue .lt-surface{width:3px;margin:0 1px;background:var(--line-strong);border-radius:2px;}
   .pp-venue .seat{box-sizing:border-box;width:9mm;height:5mm;border:1px solid var(--line-strong);border-radius:2px;background:var(--paper);flex:0 0 auto;}
   .pp-venue .seat.head{border-color:var(--gold);border-width:1.5px;}
-  .pp-entrance-label{font-size:0.62rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-soft);white-space:nowrap;}
-  .top-tables-row .tt-unit > .pp-entrance-label{margin-left:5mm;}
 
   /* The marquee itself, drawn as a rectangle around the whole dining space -
-     extra padding at the top reserves room for the bar behind the top table.
-     Walls are five separate absolutely-positioned segments rather than one
-     CSS border so the left wall can carry a gap for the service doorway. */
-  .pp-marquee{position:relative;padding:18mm 10mm 8mm 10mm;display:flex;flex-direction:column;align-items:center;gap:8mm;}
+     extra padding at the top reserves room for the bar, which sits in the
+     top-left corner. Walls are built from separate absolutely-positioned
+     segments rather than one CSS border, so the left and right walls can
+     each carry a gap for a doorway (service on the left, guests on the
+     right, by the top table). Door labels get a fixed width and sit well
+     clear of the marquee, rather than sizing to their own text, so they
+     can never run past the printable page margin and get cropped. */
+  .pp-marquee{position:relative;padding:18mm 10mm 8mm 10mm;display:flex;flex-direction:column;align-items:center;}
   .pp-marquee-top,.pp-marquee-bottom{position:absolute;left:0;right:0;border-top:1.5px solid var(--ink);}
   .pp-marquee-top{top:0;}
   .pp-marquee-bottom{bottom:0;}
-  .pp-marquee-right{position:absolute;top:0;bottom:0;right:0;border-right:1.5px solid var(--ink);}
+  .pp-marquee-right-a,.pp-marquee-right-b{position:absolute;right:0;border-right:1.5px solid var(--ink);}
+  .pp-marquee-right-a{top:0;height:16%;}
+  .pp-marquee-right-b{top:calc(16% + 11mm);bottom:0;}
   .pp-marquee-left-a,.pp-marquee-left-b{position:absolute;left:0;border-left:1.5px solid var(--ink);}
   .pp-marquee-left-a{top:0;height:70%;}
   .pp-marquee-left-b{top:calc(70% + 11mm);bottom:0;}
-  .pp-bar-label{position:absolute;top:5mm;left:50%;transform:translateX(-50%);font-size:0.64rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft);}
-  .pp-door-leaf{
-    position:absolute;left:-1px;top:70%;width:11mm;height:0;
-    border-top:1.5px solid var(--ink);transform-origin:top left;transform:rotate(-40deg);
-  }
+  .pp-bar-label{position:absolute;top:4mm;left:6mm;font-size:0.64rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-soft);}
+
+  .pp-door-leaf{position:absolute;width:11mm;height:0;border-top:1.5px solid var(--ink);}
+  .pp-door-leaf.is-left{left:-1px;top:70%;transform-origin:top left;transform:rotate(-40deg);}
+  .pp-door-leaf.is-right{right:-1px;top:16%;transform-origin:top right;transform:rotate(40deg);}
+
   .pp-door-label{
-    position:absolute;left:-4mm;top:calc(70% + 5.5mm);transform:translate(-100%,-50%);
-    font-size:0.62rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-soft);
-    white-space:nowrap;text-align:right;
+    position:absolute;width:26mm;font-size:0.6rem;letter-spacing:0.04em;text-transform:uppercase;
+    color:var(--ink-soft);line-height:1.15;transform:translateY(-50%);
   }
+  .pp-door-label.is-left{right:calc(100% + 3mm);top:calc(70% + 5.5mm);text-align:right;}
+  .pp-door-label.is-right{left:calc(100% + 3mm);top:calc(16% + 5.5mm);text-align:left;}
 
   /* Pages 2-6: one table per page, seats shown exactly as they physically
      sit, each carrying the guest's name and dietary note. The top table
@@ -1760,36 +1767,34 @@
       return block;
     }
 
-    // Marks the guest entrance beside the top table's right-hand head seat -
-    // the service entrance is drawn separately as a doorway on the marquee
-    // wall itself (see buildMarqueeFrame), not attached to a table.
-    function addGuestEntranceLabel(ttRow){
-      var guestHead = ttRow.querySelector('[data-seat-id="tt-h2"]');
-      if(!guestHead) return;
-      var guestLabel = document.createElement('div');
-      guestLabel.className = 'pp-entrance-label';
-      guestLabel.textContent = 'Guest Entrance';
-      guestHead.parentNode.appendChild(guestLabel);
+    // One doorway: a gap in the given wall (left/right) with a diagonal
+    // door-leaf line, like an architect's floor plan, plus a fixed-width
+    // label held clear of the marquee so it can never get cropped against
+    // the page margin. Positioned by percentage down the wall rather than
+    // pinned to a seat, so moving guests around never drags it out of place.
+    function buildDoorway(side, text){
+      var frag = document.createDocumentFragment();
+      var leaf = document.createElement('div'); leaf.className = 'pp-door-leaf is-' + side;
+      frag.appendChild(leaf);
+      var label = document.createElement('div'); label.className = 'pp-door-label is-' + side; label.textContent = text;
+      frag.appendChild(label);
+      return frag;
     }
 
     // The marquee walls: a plain rectangle around the whole dining space,
-    // with headroom at the top for the bar behind the top table, and a
-    // doorway on the left wall - drawn as a gap with a diagonal door leaf,
-    // like an architect's floor plan - for the service entrance. Positioned
-    // by percentage down the wall rather than pinned to a table, so moving
-    // seats around never drags the doorway out of place.
+    // with headroom at the top-left for the bar, a service doorway on the
+    // left wall (by the long tables), and a guest doorway on the right wall
+    // (by the top table).
     function buildMarqueeFrame(){
       var frame = document.createDocumentFragment();
-      ['pp-marquee-top', 'pp-marquee-right', 'pp-marquee-bottom', 'pp-marquee-left-a', 'pp-marquee-left-b'].forEach(function(cls){
+      ['pp-marquee-top', 'pp-marquee-bottom', 'pp-marquee-right-a', 'pp-marquee-right-b', 'pp-marquee-left-a', 'pp-marquee-left-b'].forEach(function(cls){
         var wall = document.createElement('div'); wall.className = cls;
         frame.appendChild(wall);
       });
       var barLabel = document.createElement('div'); barLabel.className = 'pp-bar-label'; barLabel.textContent = 'Bar';
       frame.appendChild(barLabel);
-      var doorLeaf = document.createElement('div'); doorLeaf.className = 'pp-door-leaf';
-      frame.appendChild(doorLeaf);
-      var doorLabel = document.createElement('div'); doorLabel.className = 'pp-door-label'; doorLabel.textContent = 'Service Entrance';
-      frame.appendChild(doorLabel);
+      frame.appendChild(buildDoorway('left', 'Service Entrance'));
+      frame.appendChild(buildDoorway('right', 'Guest Entrance'));
       return frame;
     }
 
@@ -1803,18 +1808,16 @@
         'Saturday 22 August 2026 · Exported ' + new Date().toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'}) + ' · ' + seatedCount + ' / ' + GUESTS.length + ' seated'));
 
       var venue = document.createElement('div'); venue.className = 'pp-venue';
-      var ttLabel = document.createElement('div'); ttLabel.className = 'pp-top-table-label'; ttLabel.textContent = 'Top table';
-      venue.appendChild(ttLabel);
-
       var marquee = document.createElement('div'); marquee.className = 'pp-marquee';
       marquee.appendChild(buildMarqueeFrame());
+      var ttLabel = document.createElement('div'); ttLabel.className = 'pp-top-table-label'; ttLabel.textContent = 'Top table';
+      marquee.appendChild(ttLabel);
       var ttRow = document.createElement('div'); ttRow.className = 'top-tables-row';
       ttRow.appendChild(buildPrintTopTableEl(false));
       marquee.appendChild(ttRow);
       var ltRow = document.createElement('div'); ltRow.className = 'long-tables-row';
       for(var t=1;t<=4;t++){ ltRow.appendChild(buildPrintLongTableEl(t, false)); }
       marquee.appendChild(ltRow);
-      addGuestEntranceLabel(ttRow);
       venue.appendChild(marquee);
       page.appendChild(venue);
 
