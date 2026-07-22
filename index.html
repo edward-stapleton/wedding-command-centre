@@ -71,6 +71,26 @@
     white-space:nowrap;
   }
 
+  /* ---------- Tap-to-place banner (touch fallback for drag-and-drop) ---------- */
+  .cc-move-banner{
+    position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:200;
+    display:flex;align-items:center;gap:14px;max-width:calc(100vw - 32px);
+    background:var(--ink);color:var(--paper-raised);border-radius:12px;
+    padding:10px 10px 10px 16px;box-shadow:0 8px 24px rgba(0,0,0,0.25);
+    font-size:0.86rem;
+  }
+  /* Author `display:flex` above otherwise beats the UA stylesheet's
+     [hidden]{display:none} - equal specificity, but author always wins
+     over user-agent regardless of source order - so this has to be
+     spelled out explicitly rather than relying on the attribute alone. */
+  .cc-move-banner[hidden]{display:none;}
+  .cc-move-banner-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cc-move-banner-cancel{
+    font:inherit;font-size:0.78rem;font-weight:700;color:var(--ink);
+    background:var(--paper-raised);border:none;border-radius:8px;
+    padding:7px 13px;cursor:pointer;flex:0 0 auto;white-space:nowrap;
+  }
+
   main{max-width:1180px;margin:0 auto;padding:36px 28px 100px;}
   section{scroll-margin-top:76px;margin-bottom:64px;}
   .section-head{display:flex;align-items:baseline;gap:14px;margin-bottom:22px;flex-wrap:wrap;}
@@ -151,6 +171,7 @@
   .chip:active{cursor:grabbing;}
   .chip.dragging{opacity:0.4;}
   .chip:hover{box-shadow:0 2px 6px rgba(36,40,32,0.12);}
+  .chip.cc-selected{box-shadow:0 0 0 2px var(--accent-dark);}
   .chip.side-ed{border-left-color:var(--accent);}
   .chip.side-laura{border-left-color:var(--laura);}
   .chip.side-both{border-left-image:linear-gradient(var(--accent),var(--laura)) 1;}
@@ -222,6 +243,7 @@
   .seat:hover{ z-index:4; }
   .seat-name{overflow:hidden;max-width:100%;}
   .seat.drag-over{border-color:var(--accent-dark);background:var(--accent-soft);}
+  .seat.cc-selected{box-shadow:0 0 0 2px var(--accent-dark);z-index:5;}
   .seat.filled{border-style:solid;cursor:grab;color:#fff;font-weight:600;border-color:transparent;}
   .seat.filled.side-ed{background:var(--accent);}
   .seat.filled.side-laura{background:var(--laura);}
@@ -297,6 +319,7 @@
   .roster-item .roster-name{flex:1 1 auto;font-size:0.88rem;cursor:grab;}
   .roster-item.dragging{opacity:0.4;}
   .roster-item.drop-target{box-shadow:inset 0 2px 0 0 var(--accent-dark);}
+  .roster-item.cc-selected{background:var(--accent-soft);}
   .roster-item .role-toggles{display:flex;flex-wrap:wrap;gap:5px;padding-left:calc(1.6em + 18px);}
   .role-pill{
     font:inherit;font-size:0.68rem;font-weight:600;letter-spacing:0.02em;
@@ -323,21 +346,54 @@
   /* ---------- Schedule ---------- */
   .sched-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:0.78rem;color:var(--ink-soft);margin-bottom:14px;}
   .sched-legend .flag{margin-right:4px;}
-  .sched-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--paper-raised);}
-  table.sched{border-collapse:collapse;width:100%;min-width:980px;font-size:0.83rem;}
-  table.sched th{
-    position:sticky;top:0;background:var(--accent);color:#fff;text-align:left;
+
+  /* Day-view timeline (Apple-Calendar-style): one absolutely-positioned
+     column per track, blocks sized proportionally to duration. Only the
+     horizontal axis scrolls (the header row stays sticky to the viewport,
+     same trick the old table used) - the whole thing scrolls vertically
+     with the page, since the day is ~1200px tall at 1px/minute. */
+  .sched-timeline{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--paper-raised);}
+  .sched-tl-inner{min-width:960px;position:relative;}
+  .sched-tl-header{display:flex;position:sticky;top:0;z-index:20;background:var(--accent);border-radius:12px 12px 0 0;overflow:hidden;}
+  .sched-tl-header .sched-tl-cell{
+    flex:1 1 0;min-width:0;padding:9px 10px;color:#fff;
     font-size:0.68rem;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;
-    padding:9px 12px;white-space:nowrap;
+    text-align:left;border-left:1px solid rgba(255,255,255,0.2);white-space:nowrap;
   }
-  table.sched td{padding:7px 12px;border-top:1px solid var(--line);vertical-align:top;}
-  table.sched td.time{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent-dark);white-space:nowrap;}
-  table.sched tr.divider td{
-    background:var(--ink);color:var(--paper);font-family:var(--sans);font-weight:700;
-    font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;padding:8px 12px;
+  .sched-tl-header .sched-tl-gutter-cell{flex:0 0 56px;border-left:none;}
+  .sched-tl-header .sched-tl-loc-cell{flex:0 0 160px;}
+
+  .sched-tl-body{position:relative;display:flex;}
+  .sched-tl-gutter{flex:0 0 56px;position:relative;border-right:1px solid var(--line-strong);}
+  .sched-tl-hour{
+    position:absolute;left:0;right:0;transform:translateY(-100%);
+    font-family:var(--mono);font-variant-numeric:tabular-nums;
+    font-size:0.66rem;color:var(--ink-soft);padding:0 6px 1px;pointer-events:none;
   }
-  table.sched tr:hover td{background:var(--accent-soft);}
-  table.sched tr.divider:hover td{background:var(--ink);}
+  .sched-tl-gridline{position:absolute;left:0;right:0;height:1px;background:var(--line);pointer-events:none;}
+
+  .sched-tl-col{flex:1 1 0;min-width:0;position:relative;border-left:1px solid var(--line);}
+  .sched-tl-col.sched-tl-loc{flex:0 0 160px;background:var(--paper);}
+
+  .sched-tl-block{
+    position:absolute;left:2px;right:2px;box-sizing:border-box;
+    border-radius:6px;background:var(--paper-raised);border:1px solid var(--line-strong);
+    padding:3px 6px;font-size:0.72rem;line-height:1.3;overflow:hidden;
+  }
+  .sched-tl-block.is-empty{border-color:transparent;background:none;}
+  .sched-tl-block.is-flagged{border-color:var(--gold);background:var(--gold-soft);}
+  .sched-tl-block .flag{margin-right:3px;}
+  .sched-tl-loc .sched-tl-block{background:var(--accent-soft);border-color:var(--line);color:var(--accent-dark);font-style:italic;}
+  .sched-tl-loc .sched-tl-block.is-empty{background:none;}
+
+  .sched-tl-handle{position:absolute;left:0;right:0;height:9px;transform:translateY(-4.5px);cursor:row-resize;z-index:12;touch-action:none;}
+  .sched-tl-handle:hover, .sched-tl-handle.is-dragging{background:var(--accent-dark);opacity:0.3;}
+
+  .sched-tl-divider{
+    position:absolute;left:0;right:0;background:var(--ink);color:var(--paper);
+    display:flex;align-items:center;padding:0 12px;
+    font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;z-index:15;
+  }
 
   /* ---------- Who's who ---------- */
   .who-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:24px;}
@@ -356,19 +412,75 @@
   .print-header{margin-bottom:18px;}
   .print-header h1{font-family:var(--serif);font-size:1.6rem;margin-bottom:4px;}
   .print-header .print-sub{font-size:0.85rem;color:var(--ink-soft);}
-  table.print-table{border-collapse:collapse;width:100%;margin-bottom:22px;font-size:0.86rem;page-break-inside:avoid;}
-  table.print-table thead tr:first-child th{background:var(--accent-soft);font-family:var(--serif);font-weight:400;font-size:1.05rem;text-align:left;padding:8px 10px;}
-  table.print-table th{text-align:left;font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-soft);padding:6px 10px;border-bottom:1px solid var(--line-strong);}
-  table.print-table td{padding:5px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
   .print-empty-row{font-style:italic;color:var(--ink-soft);}
-  .print-head-tag{font-size:0.68rem;color:var(--gold);font-weight:700;text-transform:uppercase;margin-left:5px;}
-  .print-footnote{font-size:0.78rem;color:var(--ink-soft);margin-top:10px;}
+  .print-footnote{font-size:0.78rem;color:var(--ink-soft);margin-top:14px;}
+
+  .pp-page{width:100%;}
+
+  /* Page 1: whole-room schematic, shrunk right down since no names are
+     shown, so the top table and all four long tables fit on one sheet -
+     same flex structure as the live venue diagram, just miniaturised. */
+  .pp-venue{display:flex;flex-direction:column;align-items:center;gap:8mm;}
+  .pp-top-table-label{font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:3px;}
+  .pp-venue .top-tables-row,.pp-venue .long-tables-row{display:flex;justify-content:center;}
+  .pp-venue .long-tables-row{gap:6mm;}
+  .pp-venue .tt-unit{display:flex;flex-direction:row;align-items:center;gap:2px;}
+  .pp-venue .tt-mid{display:flex;flex-direction:column;gap:0;}
+  .pp-venue .tt-row{display:flex;gap:2px;}
+  .pp-venue .tt-seg{display:flex;gap:2px;padding-right:4px;margin-right:4px;border-right:1px dashed var(--line-strong);}
+  .pp-venue .tt-seg:last-child{border-right:none;margin-right:0;padding-right:0;}
+  .pp-venue .tt-surface{height:3px;margin:3px 0;background:var(--line-strong);border-radius:2px;}
+  .pp-venue .long-table-block{display:flex;flex-direction:column;align-items:center;}
+  .pp-venue .long-table-title{font-size:0.6rem;margin-bottom:3px;color:var(--ink-soft);}
+  .pp-venue .long-table-rig{display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .pp-venue .long-table-body{display:flex;flex-direction:row;gap:2px;}
+  .pp-venue .lt-col{display:flex;flex-direction:column;gap:0;}
+  .pp-venue .lt-segment{display:flex;flex-direction:column;gap:2px;padding-bottom:4px;margin-bottom:4px;border-bottom:1px dashed var(--line-strong);}
+  .pp-venue .lt-segment:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+  .pp-venue .lt-surface{width:3px;margin:0 1px;background:var(--line-strong);border-radius:2px;}
+  .pp-venue .seat{box-sizing:border-box;width:9mm;height:5mm;border:1px solid var(--line-strong);border-radius:2px;background:var(--paper);flex:0 0 auto;}
+  .pp-venue .seat.head{border-color:var(--gold);border-width:1.5px;}
+  .pp-entrance-label{font-size:0.62rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-soft);white-space:nowrap;}
+  .top-tables-row .tt-unit > .pp-entrance-label{margin-left:5mm;}
+  .pp-entrance-row{display:flex;align-items:center;gap:3mm;}
+
+  /* Pages 2-6: one table per page, seats shown exactly as they physically
+     sit, each carrying the guest's name and dietary note. */
+  .pp-page-detail{display:flex;flex-direction:column;align-items:center;}
+  .pp-page-detail .long-table-title{display:none;}
+  .pp-page-detail .tt-unit{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:3mm;}
+  .pp-page-detail .tt-mid{display:flex;flex-direction:column;gap:3mm;}
+  .pp-page-detail .tt-row{display:flex;gap:2mm;}
+  .pp-page-detail .tt-seg{display:flex;gap:2mm;padding-right:4mm;margin-right:4mm;border-right:1px dashed var(--line-strong);}
+  .pp-page-detail .tt-seg:last-child{border-right:none;margin-right:0;padding-right:0;}
+  .pp-page-detail .tt-surface{height:2px;margin:2mm 0;background:var(--line-strong);width:100%;}
+  .pp-page-detail .long-table-rig{display:flex;flex-direction:column;align-items:center;gap:3mm;}
+  .pp-page-detail .long-table-body{display:flex;flex-direction:row;gap:8mm;align-items:center;}
+  .pp-page-detail .lt-col{display:flex;flex-direction:column;gap:2mm;}
+  .pp-page-detail .lt-segment{display:flex;flex-direction:column;gap:2mm;padding-bottom:3.5mm;margin-bottom:3.5mm;border-bottom:1px dashed var(--line-strong);}
+  .pp-page-detail .lt-segment:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+  .pp-page-detail .lt-surface{width:2px;align-self:stretch;background:var(--line-strong);}
+  .pp-page-detail .seat{
+    box-sizing:border-box;
+    border:1.5px dashed var(--line-strong);border-radius:6px;background:var(--paper);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:1.2mm 2mm;color:var(--ink-soft);font-size:0.7rem;flex:0 0 auto;
+  }
+  .pp-page-detail.pp-toptable .seat{width:19mm;min-height:12mm;}
+  .pp-page-detail.pp-longtable .seat{width:55mm;min-height:8mm;}
+  .pp-page-detail .seat.head{border-color:var(--gold);}
+  .pp-page-detail .seat.filled{border-style:solid;}
+  .pp-page-detail .seat.pp-empty{font-style:italic;}
+  .pp-seat-name{font-weight:600;color:var(--ink);font-size:0.85rem;}
+  .pp-seat-diet{font-size:0.72rem;color:var(--gold);margin-top:0.5mm;}
 
   @media print{
     body.cc-print-mode #authGate,
     body.cc-print-mode #appContent{display:none !important;}
     body.cc-print-mode #tablePlanPrint{display:block !important;}
-    @page{margin:16mm;}
+    .pp-page{page-break-after:always;}
+    .pp-page:last-child{page-break-after:auto;}
+    @page{margin:14mm;}
   }
 
   footer{max-width:1180px;margin:0 auto;padding:20px 28px 60px;color:var(--ink-soft);font-size:0.78rem;border-top:1px solid var(--line);}
@@ -432,6 +544,16 @@
 </div>
 
 <div id="appContent" class="hidden">
+
+<!-- Tap-to-place UX for touchscreens: native HTML5 drag-and-drop (used by
+     Table Planner and Cricket Teams) never fires on touch at all, so tapping
+     a chip/seat/roster-item selects it, this banner confirms the pick-up,
+     and tapping a destination completes the move. Desktop drag is untouched;
+     this is a parallel path both mouse and touch can use. -->
+<div id="ccMoveBanner" class="cc-move-banner" hidden>
+  <span class="cc-move-banner-text"></span>
+  <button type="button" class="cc-move-banner-cancel">Cancel</button>
+</div>
 
 <header class="masthead">
   <div class="masthead-inner">
@@ -748,105 +870,16 @@
 <section id="schedule">
   <div class="section-head">
     <h2>Day Schedule</h2>
-    <span class="section-tag">Saturday 22 August 2026 · 15-minute blocks</span>
+    <span class="section-tag">Saturday 22 August 2026 · drag a boundary to reschedule</span>
   </div>
-  <p class="lede">Built from the venue/vendor-facing "Schedule" tab, the wedding-party role assignments, and the narrative weekend plan. <span class="flag">Flagged rows</span> are genuine open questions still on Ed's draft, not confirmed plans.</p>
+  <p class="lede">Built from the venue/vendor-facing "Schedule" tab, the wedding-party role assignments, and the narrative weekend plan. <span class="flag">Flagged blocks</span> are genuine open questions still on Ed's draft, not confirmed plans.</p>
   <div class="sched-legend">
     <span><strong>Groomsparty</strong> = Best Men &amp; Groomsmen</span>
     <span><strong>Bridal Party</strong> = Maid of Honour, Bridesmaids &amp; Bridesman</span>
     <span><span class="flag">⚠</span> = open question, not yet confirmed</span>
   </div>
 
-  <div class="sched-scroll">
-  <table class="sched">
-    <thead><tr>
-      <th>Time</th><th>Ed</th><th>Laura</th><th>Groomsparty</th><th>Bridal Party</th><th>Family</th><th>Guests</th><th>Location</th>
-    </tr></thead>
-    <tbody>
-      <tr class="divider"><td colspan="8">Morning — getting ready</td></tr>
-      <tr><td class="time">07:00</td><td>Asleep / free, at the groomsmen's flat</td><td>Hair &amp; make-up begins</td><td>Free, breakfast at the flat</td><td>Hair &amp; make-up alongside Laura</td><td>Travelling to Oxford / at accommodation</td><td>Travelling to Oxford</td><td>Groomsmen's flat, Oxford / Dove House Farm</td></tr>
-      <tr><td class="time">07:15</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
-      <tr><td class="time">07:30</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
-      <tr><td class="time">07:45</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
-      <tr><td class="time">08:00</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
-      <tr><td class="time">08:15</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
-      <tr><td class="time">08:30</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
-      <tr><td class="time">08:45</td><td>Waking, getting ready to run</td><td>Hair &amp; make-up continues</td><td>Waking, getting ready to run</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
-      <tr><td class="time">09:00</td><td>Parkrun — University Parks</td><td>Hair &amp; make-up continues</td><td>Parkrun with Ed</td><td>Hair &amp; make-up continues</td><td>—</td><td>Optional — all welcome to join</td><td>University Parks</td></tr>
-      <tr><td class="time">09:15</td><td>Parkrun continues</td><td>Hair &amp; make-up continues</td><td>Parkrun continues</td><td>Hair &amp; make-up continues</td><td>—</td><td>Optional parkrun</td><td>University Parks</td></tr>
-      <tr><td class="time">09:30</td><td>Post-parkrun breakfast</td><td>Hair &amp; make-up continues</td><td>Post-parkrun breakfast</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>Groomsmen's flat / cafe</td></tr>
-      <tr><td class="time">09:45</td><td>Breakfast continues</td><td>Hair &amp; make-up continues</td><td>Breakfast continues</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
-      <tr><td class="time">10:00</td><td>Breakfast continues</td><td>Hair &amp; make-up continues</td><td>Breakfast continues</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
-      <tr><td class="time">10:15</td><td>Breakfast winding down</td><td>Hair &amp; make-up continues</td><td>Breakfast winding down</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
-      <tr><td class="time">10:30</td><td>Showers</td><td>Hair &amp; make-up continues</td><td>Showers</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>Groomsmen's flat</td></tr>
-      <tr><td class="time">10:45</td><td>Showers</td><td>Hair &amp; make-up continues</td><td>Showers</td><td>Hair &amp; make-up continues</td><td>—</td><td>—</td><td>—</td></tr>
-      <tr><td class="time">11:00</td><td>Showers</td><td>Hair &amp; make-up finishing</td><td>Showers</td><td>Hair &amp; make-up finishing</td><td>—</td><td>—</td><td>—</td></tr>
-      <tr><td class="time">11:15</td><td>Showers finishing</td><td>Hair &amp; make-up finishing</td><td>Showers finishing</td><td>Hair &amp; make-up finishing</td><td>—</td><td>—</td><td>—</td></tr>
-      <tr><td class="time">11:30</td><td>Dressing — into the suit</td><td>Getting into the dress <em>(est.)</em></td><td>Dressing alongside Ed</td><td>Helping Laura into her dress <em>(est.)</em></td><td>—</td><td>—</td><td>Groomsmen's flat / Dove House Farm</td></tr>
-      <tr><td class="time">11:45</td><td>Dressing continues</td><td>Dress continues <em>(est.)</em></td><td>Dressing continues</td><td>Continues <em>(est.)</em></td><td>—</td><td>—</td><td>—</td></tr>
-      <tr><td class="time">12:00</td><td>Buttonholes, final prep</td><td>Final touches <em>(est.)</em></td><td>Buttonholes, final prep</td><td>Final touches <em>(est.)</em></td><td>Travelling to church</td><td>Travelling to Oxford / church</td><td>—</td></tr>
-      <tr><td class="time">12:15</td><td>Final prep</td><td>Final touches <em>(est.)</em></td><td>Final prep</td><td>Final touches <em>(est.)</em></td><td>—</td><td>—</td><td>—</td></tr>
-      <tr><td class="time">12:30</td><td>Travel to church</td><td>Bridal car to church <em>(est.)</em></td><td>Travel to church with Ed</td><td>Travel with Laura <em>(est.)</em></td><td>Arrive by 12:45</td><td>Arrive by 12:45 — collect order of service, take seats</td><td>Route to St Margaret's</td></tr>
-      <tr><td class="time">12:45</td><td>Waiting at the altar</td><td>En route <em>(est.)</em></td><td>At the church with Ed; ushers (Danny Harford, Nick Mann) seat guests</td><td>With Laura <em>(est.)</em></td><td>Seated</td><td>Seated</td><td>St Margaret's Church</td></tr>
-
-      <tr class="divider"><td colspan="8">Ceremony</td></tr>
-      <tr><td class="time">13:00</td><td>Ceremony begins</td><td>Arrives, processes in</td><td>Best men stand with Ed</td><td>Process in with Laura</td><td>Watching</td><td>Watching</td><td>St Margaret's Church</td></tr>
-      <tr><td class="time">13:15</td><td>Readings &amp; sermon</td><td>Readings &amp; sermon</td><td>Watching</td><td>Watching</td><td>Watching — Rebecca Green &amp; Elliot Greenwood read, Toni Walsh reads the bible passage</td><td>Watching</td><td>St Margaret's Church</td></tr>
-      <tr><td class="time">13:30</td><td>Vows &amp; ring exchange</td><td>Vows &amp; ring exchange</td><td>Rings handed over</td><td>Watching</td><td>Meg West &amp; James West sign as witnesses</td><td>Watching</td><td>St Margaret's Church</td></tr>
-      <tr><td class="time">13:45</td><td>Married — church photos <em>(est.)</em></td><td>Married — church photos <em>(est.)</em></td><td>Photos <em>(est.)</em></td><td>Photos <em>(est.)</em></td><td>Photos <em>(est.)</em></td><td>Filing out</td><td>St Margaret's Church</td></tr>
-
-      <tr class="divider"><td colspan="8">Walk to the reception</td></tr>
-      <tr><td class="time">14:00</td><td>Guided walk across Port Meadow</td><td>Guided walk across Port Meadow</td><td>James West, Ed Kirwan, Tom Stevens &amp; Elliot Greenwood guide as "Port Meadow Sherpas"</td><td>Walking with the group</td><td>Walking, or taxi/drive via Binsey Lane</td><td>Walking (~15 min, flat shoes recommended), or taxi/drive</td><td>Port Meadow</td></tr>
-      <tr><td class="time">14:15</td><td>Arriving at the Medley</td><td>Arriving at the Medley</td><td>Arriving</td><td>Arriving</td><td>Arriving</td><td>Arriving</td><td>Port Meadow → Medley Walled Garden</td></tr>
-
-      <tr class="divider"><td colspan="8">Drinks reception</td></tr>
-      <tr><td class="time">14:30</td><td>Welcome drinks &amp; canapés</td><td>Welcome drinks &amp; canapés</td><td>Mingling</td><td>Mingling</td><td>Mingling</td><td>Welcome drinks &amp; canapés, cocktail hour begins</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">14:45</td><td>Drinks &amp; canapés continue</td><td>Drinks &amp; canapés continue</td><td>—</td><td>—</td><td>—</td><td>Drinks &amp; canapés continue</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">15:00</td><td>Drinks &amp; canapés continue</td><td>Drinks &amp; canapés continue</td><td>—</td><td>—</td><td>—</td><td>Drinks &amp; canapés continue</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">15:15</td><td>Drinks &amp; canapés continue</td><td>Drinks &amp; canapés continue</td><td>—</td><td>—</td><td>—</td><td>Drinks &amp; canapés continue</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">15:30</td><td>Drinks &amp; canapés continue</td><td>Drinks &amp; canapés continue</td><td>—</td><td>—</td><td>—</td><td>Drinks &amp; canapés continue</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">15:45</td><td>Guests asked to find seats</td><td>Guests asked to find seats</td><td>Finding seats</td><td>Finding seats</td><td>Finding seats</td><td>Finding seats</td><td>Medley Walled Garden</td></tr>
-
-      <tr class="divider"><td colspan="8">Speeches &amp; wedding breakfast</td></tr>
-      <tr><td class="time">16:00</td><td>Listening</td><td>Listening</td><td>Listening</td><td>Listening</td><td>Speech 1 — Peter Harford, father of the bride</td><td>Listening</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">16:15</td><td>Listening</td><td>Speech 2 — Laura</td><td>Listening</td><td>Listening</td><td>Listening</td><td>Listening</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">16:30</td><td>Starter served</td><td>Starter served</td><td>Starter served</td><td>Starter served</td><td>Starter served</td><td>Starter — peach &amp; burrata salad</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">16:45</td><td>Starter continues</td><td>Starter continues</td><td>Starter continues</td><td>Starter continues</td><td>Starter continues</td><td>Starter continues</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">17:00</td><td>Main served</td><td>Main served</td><td>Main served</td><td>Main served</td><td>Main served</td><td>Main — sirloin off the Trailblazer BBQ, chimichurri, sides</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">17:15</td><td>Main continues</td><td>Main continues</td><td>Main continues</td><td>Main continues</td><td>Main continues</td><td>Main continues</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">17:30</td><td>Listening</td><td>Listening</td><td>Listening</td><td>Speech 3 — Kate Harford, Maid of Honour</td><td>Listening</td><td>Listening</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">17:45</td><td>Speech 4 — Ed</td><td>Listening</td><td>Listening</td><td>Listening</td><td>Listening</td><td>Listening</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">18:00</td><td>Dessert served</td><td>Dessert served</td><td>Dessert served</td><td>Dessert served</td><td>Dessert served</td><td>Dessert — chocolate cremeux with strawberries</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">18:15</td><td>Dessert continues</td><td>Dessert continues</td><td>Dessert continues</td><td>Dessert continues</td><td>Dessert continues</td><td>Dessert continues</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">18:30</td><td>Listening</td><td>Listening</td><td>Speech 5 — Harry Wilson &amp; George Rendall (joint)</td><td>Listening</td><td>Listening</td><td>Listening</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">18:45</td><td>Mingling</td><td>Mingling</td><td>Mingling</td><td>Mingling</td><td>Mingling</td><td>Cocktails resume, tables cleared</td><td>Medley Walled Garden</td></tr>
-
-      <tr class="divider"><td colspan="8">Evening — dancing</td></tr>
-      <tr><td class="time">19:00</td><td>Mingling</td><td>Mingling</td><td>Mingling</td><td>Mingling</td><td>Mingling</td><td>Cocktail hour</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">19:15</td><td>First dance <span class="flag">⚠</span></td><td>First dance <span class="flag">⚠</span></td><td>Watching</td><td>Watching</td><td>Watching</td><td>Watching — DJ music per the draft schedule</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">19:30</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>DJ music, dancefloor open</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">19:45</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>DJ music continues</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">20:00</td><td>Dancing <span class="flag">⚠</span></td><td>Dancing <span class="flag">⚠</span></td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Band "Truly Medley Deeply" first set begins <span class="flag">⚠ also listed as first dance</span></td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">20:15</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Band first set continues</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">20:30</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Band first set continues</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">20:45</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Band first set continues</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">21:00</td><td>Dancing / food</td><td>Dancing / food</td><td>Dancing / food</td><td>Dancing / food</td><td>Dancing / food</td><td>DJ music &amp; pizza (Medley's pizza oven)</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">21:15</td><td>Dancing / food</td><td>Dancing / food</td><td>Dancing / food</td><td>Dancing / food</td><td>Dancing / food</td><td>Pizza &amp; DJ continue</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">21:30</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Band second set</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">21:45</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Band second set continues</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">22:00</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Band second set continues</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">22:15</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>DJ music</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">22:30</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>Dancing</td><td>DJ music continues</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">22:45</td><td>Last dances</td><td>Last dances</td><td>Last dances</td><td>Last dances</td><td>Last dances</td><td>DJ music continues</td><td>Medley Walled Garden</td></tr>
-
-      <tr class="divider"><td colspan="8">Carriages</td></tr>
-      <tr><td class="time">23:00</td><td>Music finishes</td><td>Music finishes</td><td>Music finishes</td><td>Music finishes</td><td>Music finishes</td><td>Music finishes</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">23:15</td><td>Carriages <span class="flag">⚠</span></td><td>Carriages <span class="flag">⚠</span></td><td>Carriages</td><td>Carriages</td><td>Carriages</td><td>Carriages / guided walk to Jericho? — route marked as unconfirmed on Ed's draft</td><td>Medley Walled Garden</td></tr>
-      <tr><td class="time">23:30</td><td>Departing <span class="flag">⚠</span></td><td>Departing <span class="flag">⚠</span></td><td>Departing</td><td>Departing</td><td>Departing</td><td>Taxis from Jericho? / guided twilight walk to Walton Well car park — also unconfirmed</td><td>Walton Well Car Park</td></tr>
-      <tr><td class="time">23:45</td><td>Day ends</td><td>Day ends</td><td>Day ends</td><td>Day ends</td><td>Day ends</td><td>Day ends</td><td>—</td></tr>
-    </tbody>
-  </table>
-  </div>
+  <div id="scheduleTimeline" class="sched-timeline"></div>
 </section>
 
 <!-- ================= WHO'S WHO ================= -->
@@ -1024,14 +1057,46 @@
     }).catch(function(err){ console.error('cc_api_post_failed', type, err); });
   }
 
+  // Tap-to-place: touch never fires HTML5 dragstart, so Table Planner and
+  // Cricket Teams both fall back to "tap to pick up, tap a destination to
+  // place" on any input type. Only one thing can be picked up at once
+  // system-wide, so a single shared banner (and its one active onCancel)
+  // is simpler than each module owning its own.
+  var ccMoveBannerCancel = null;
+  function ccShowMoveBanner(label, onCancel){
+    var banner = document.getElementById('ccMoveBanner');
+    if(!banner) return;
+    banner.querySelector('.cc-move-banner-text').textContent = 'Moving ' + label + ' — tap a destination';
+    banner.hidden = false;
+    ccMoveBannerCancel = onCancel || null;
+  }
+  function ccHideMoveBanner(){
+    var banner = document.getElementById('ccMoveBanner');
+    if(banner) banner.hidden = true;
+    ccMoveBannerCancel = null;
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    var cancelBtn = document.querySelector('.cc-move-banner-cancel');
+    if(cancelBtn) cancelBtn.addEventListener('click', function(){
+      var fn = ccMoveBannerCancel;
+      ccHideMoveBanner();
+      if(fn) fn();
+    });
+  });
+
   // RSVP forms let guests type free text for dietary notes, and plenty just
   // type a variant of "no requirements" rather than leaving it blank - those
   // aren't real notes and shouldn't show up as one in any live-data view.
   var DIETARY_NONE_VALUES = ['none','n/a','na','no','nil','nothing','no allergies','no allergy','no dietary requirements','no dietary requirement','no requirements','no thanks','nope'];
+  // A few guests answered with a joke instead of a real requirement - reviewed
+  // by hand against the live RSVP data, so these are exact matches rather
+  // than a "contains meat" style heuristic that could false-positive on an
+  // actual allergy (e.g. "no red meat").
+  var DIETARY_JOKE_VALUES = ['nope ... easy as pie', 'plenty of meat please', 'allergic to macca’s shit chat'];
   function ccDietaryNote(raw){
     var trimmed = (raw || '').trim();
     var normalized = trimmed.toLowerCase().replace(/[.!]+$/, '');
-    if(!trimmed || DIETARY_NONE_VALUES.indexOf(normalized) !== -1) return null;
+    if(!trimmed || DIETARY_NONE_VALUES.indexOf(normalized) !== -1 || DIETARY_JOKE_VALUES.indexOf(normalized) !== -1) return null;
     return trimmed;
   }
 
@@ -1130,6 +1195,7 @@
     var cricketGuests = ccBuildGuestList(payload.guests || [], 'cricket_attendance');
     if(window.CCTablePlanner) window.CCTablePlanner.init(seatingGuests, payload.seating || {});
     if(window.CCCricketTeams) window.CCCricketTeams.init(cricketGuests, payload.cricket || {});
+    if(window.CCSchedule) window.CCSchedule.init(payload.schedule || {});
     if(isCache){
       ccSetSyncStatus('offline — showing last cached copy, changes here won’t save');
     } else {
@@ -1201,6 +1267,34 @@
     var built = false;
     var saveRemote = ccDebounce(function(){ ccApiPost('seating', seating); }, 700);
 
+    // Tap-to-place: touch never fires HTML5 dragstart, so this is the touch
+    // (and mouse-click) equivalent of drag-and-drop. { guestKey, fromSeat }
+    // where fromSeat is null when picked up from the unseated pool.
+    var selected = null;
+
+    function clearSelection(){
+      selected = null;
+      ccHideMoveBanner();
+      renderAll();
+    }
+
+    function placeSelectedAtSeat(seatId){
+      if(!selected) return;
+      var destGuestKey = seating[seatId];
+      if(selected.fromSeat && selected.fromSeat !== seatId){
+        if(destGuestKey){ seating[selected.fromSeat] = destGuestKey; } else { delete seating[selected.fromSeat]; }
+      }
+      seating[seatId] = selected.guestKey;
+      saveSeating();
+      clearSelection();
+    }
+
+    function placeSelectedAtPool(){
+      if(!selected) return;
+      if(selected.fromSeat){ delete seating[selected.fromSeat]; saveSeating(); }
+      clearSelection();
+    }
+
     function sideClass(side){
       if(side === 'Ed') return 'side-ed';
       if(side === 'Laura') return 'side-laura';
@@ -1263,6 +1357,19 @@
         saveSeating();
         renderAll();
       });
+      // Tap-to-place: tapping a seat either picks up its occupant (nothing
+      // currently selected) or places whatever's selected here. The unseat
+      // "x" button's own listener stopPropagation()s so it never reaches this.
+      el.addEventListener('click', function(e){
+        e.stopPropagation();
+        if(selected){ placeSelectedAtSeat(seatId); return; }
+        var guestKey = seating[seatId];
+        if(guestKey){
+          selected = { guestKey: guestKey, fromSeat: seatId };
+          ccShowMoveBanner(guestKey, clearSelection);
+          renderAll();
+        }
+      });
       return el;
     }
 
@@ -1271,6 +1378,7 @@
       el.innerHTML = '';
       el.draggable = false;
       el.classList.remove('filled','side-ed','side-laura','side-both','gender-f','unconfirmed');
+      el.classList.toggle('cc-selected', !!(selected && selected.fromSeat === seatId));
       el.title = '';
       if(!guestKey){
         el.textContent = isHeadSeat(seatId) ? 'Head' : '';
@@ -1390,6 +1498,7 @@
     function makeChip(g){
       var chip = document.createElement('div');
       chip.className = 'chip ' + sideClass(g.side) + (g.gender === 'F' ? ' gender-f' : '') + (g.unconfirmed ? ' unconfirmed' : '');
+      chip.classList.toggle('cc-selected', !!(selected && !selected.fromSeat && selected.guestKey === g.label));
       chip.draggable = true;
       chip.textContent = g.label;
       if(g.unconfirmed){
@@ -1409,6 +1518,15 @@
         chip.classList.add('dragging');
       });
       chip.addEventListener('dragend', function(){ chip.classList.remove('dragging'); });
+      // Tap-to-place: tapping an unselected chip picks it up (or switches
+      // pick-up to this one); tapping the already-selected chip cancels.
+      chip.addEventListener('click', function(e){
+        e.stopPropagation();
+        if(selected && !selected.fromSeat && selected.guestKey === g.label){ clearSelection(); return; }
+        selected = { guestKey: g.label, fromSeat: null };
+        ccShowMoveBanner(g.label, clearSelection);
+        renderAll();
+      });
       return chip;
     }
 
@@ -1449,48 +1567,170 @@
       return m ? ('Long table ' + m[1]) : 'Other';
     }
 
-    // Builds the printable table-plan document: one table per venue table,
-    // listing every seated guest with their dietary note, in physical seat
-    // order (head, then side segments, then head) so it doubles as a
-    // caterer-facing layout, not just a name list.
-    function buildPrintable(){
-      var groups = [];
-      var byLabel = {};
-      SEAT_IDS.forEach(function(seatId){
-        var label = tableLabelForSeat(seatId);
-        if(!byLabel[label]){ byLabel[label] = { label: label, seats: [] }; groups.push(byLabel[label]); }
-        var guestKey = seating[seatId];
-        byLabel[label].seats.push({ seatId: seatId, guest: guestKey ? guestByKey[guestKey] : null });
-      });
+    function printHeaderEl(titleHtml, subText){
+      var header = document.createElement('div'); header.className = 'print-header';
+      var h1 = document.createElement('h1'); h1.innerHTML = titleHtml;
+      var sub = document.createElement('div'); sub.className = 'print-sub'; sub.textContent = subText;
+      header.appendChild(h1); header.appendChild(sub);
+      return header;
+    }
 
+    // A seat box for the printable PDF. Page 1 (showDetail false) renders
+    // pure structure - no names - so the whole room fits on one sheet as a
+    // schematic. Pages 2-6 (showDetail true) render one table at a time, so
+    // each seat can carry the guest's name and dietary note in full.
+    function makePrintSeatEl(seatId, showDetail){
+      var el = document.createElement('div');
+      el.className = 'seat' + (isHeadSeat(seatId) ? ' head' : '');
+      el.dataset.seatId = seatId;
+      if(!showDetail){
+        return el;
+      }
+      var guestKey = seating[seatId];
+      var g = guestKey ? guestByKey[guestKey] : null;
+      if(g){
+        el.classList.add('filled');
+        var nameEl = document.createElement('span'); nameEl.className = 'pp-seat-name'; nameEl.textContent = g.label;
+        el.appendChild(nameEl);
+        var dietEl = document.createElement('span'); dietEl.className = 'pp-seat-diet';
+        dietEl.textContent = g.dietary ? g.dietary : '';
+        el.appendChild(dietEl);
+      } else {
+        el.classList.add('pp-empty');
+        el.textContent = isHeadSeat(seatId) ? 'Head' : '';
+      }
+      return el;
+    }
+
+    // Same seat/segment structure as buildVenue()'s top-table unit, rebuilt
+    // as plain (non-interactive) elements for print.
+    function buildPrintTopTableEl(showDetail){
+      var unit = document.createElement('div'); unit.className = 'tt-unit';
+      var mid = document.createElement('div'); mid.className = 'tt-mid';
+      var rowA = document.createElement('div'); rowA.className = 'tt-row';
+      var rowB = document.createElement('div'); rowB.className = 'tt-row';
+      for(var s=1;s<=2;s++){
+        var segA = document.createElement('div'); segA.className = 'tt-seg';
+        for(var i=1;i<=3;i++){ segA.appendChild(makePrintSeatEl('tt-s'+s+'-a'+i, showDetail)); }
+        rowA.appendChild(segA);
+        var segB = document.createElement('div'); segB.className = 'tt-seg';
+        for(var i=1;i<=3;i++){ segB.appendChild(makePrintSeatEl('tt-s'+s+'-b'+i, showDetail)); }
+        rowB.appendChild(segB);
+      }
+      var ttSurface = document.createElement('div'); ttSurface.className = 'tt-surface';
+      mid.appendChild(rowA); mid.appendChild(ttSurface); mid.appendChild(rowB);
+      unit.appendChild(makePrintSeatEl('tt-h1', showDetail));
+      unit.appendChild(mid);
+      unit.appendChild(makePrintSeatEl('tt-h2', showDetail));
+      return unit;
+    }
+
+    // Same structure as buildVenue()'s long-table block, rebuilt for print.
+    function buildPrintLongTableEl(t, showDetail){
+      var block = document.createElement('div'); block.className = 'long-table-block';
+      var title = document.createElement('div'); title.className = 'long-table-title';
+      title.textContent = 'Long table ' + t;
+      var rig = document.createElement('div'); rig.className = 'long-table-rig';
+      var body = document.createElement('div'); body.className = 'long-table-body';
+      var colA = document.createElement('div'); colA.className = 'lt-col';
+      var colB = document.createElement('div'); colB.className = 'lt-col';
+      for(var s=1;s<=4;s++){
+        var segA = document.createElement('div'); segA.className = 'lt-segment';
+        for(var i=1;i<=3;i++){ segA.appendChild(makePrintSeatEl('lt'+t+'-s'+s+'-a'+i, showDetail)); }
+        colA.appendChild(segA);
+        var segB = document.createElement('div'); segB.className = 'lt-segment';
+        for(var i=1;i<=3;i++){ segB.appendChild(makePrintSeatEl('lt'+t+'-s'+s+'-b'+i, showDetail)); }
+        colB.appendChild(segB);
+      }
+      var surf = document.createElement('div'); surf.className = 'lt-surface';
+      body.appendChild(colA); body.appendChild(surf); body.appendChild(colB);
+      rig.appendChild(makePrintSeatEl('lt'+t+'-h1', showDetail));
+      rig.appendChild(body);
+      rig.appendChild(makePrintSeatEl('lt'+t+'-h2', showDetail));
+      block.appendChild(title); block.appendChild(rig);
+      return block;
+    }
+
+    // Marks the marquee's two doorways on the page-1 floor plan: the guest
+    // entrance beside the top table's right-hand head seat, and the service
+    // entrance beside long table 1's far head seat (bottom-left of the room).
+    function addEntranceLabels(ttRow, ltRow){
+      var guestHead = ttRow.querySelector('[data-seat-id="tt-h2"]');
+      if(guestHead){
+        var guestLabel = document.createElement('div');
+        guestLabel.className = 'pp-entrance-label';
+        guestLabel.textContent = 'Guest Entrance';
+        guestHead.parentNode.appendChild(guestLabel);
+      }
+      var serviceHead = ltRow.querySelector('[data-seat-id="lt1-h2"]');
+      if(serviceHead){
+        var wrapper = document.createElement('div');
+        wrapper.className = 'pp-entrance-row';
+        var serviceLabel = document.createElement('div');
+        serviceLabel.className = 'pp-entrance-label';
+        serviceLabel.textContent = 'Service Entrance';
+        serviceHead.parentNode.insertBefore(wrapper, serviceHead);
+        wrapper.appendChild(serviceLabel);
+        wrapper.appendChild(serviceHead);
+      }
+    }
+
+    // Page 1: the whole room, structure only (no names), so it reads as a
+    // floor plan - top table across the head, four long tables running
+    // away from it, exactly as the live planner shows it.
+    function buildLayoutPage(){
+      var page = document.createElement('div'); page.className = 'pp-page pp-page-layout';
       var seatedCount = Object.keys(seating).length;
-      var html = '';
-      html += '<div class="print-header"><h1>Ed &amp; Laura — Table Plan</h1>';
-      html += '<div class="print-sub">Saturday 22 August 2026 · Exported ' + escapeHtml(new Date().toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'})) + ' · ' + seatedCount + ' / ' + GUESTS.length + ' seated</div></div>';
+      page.appendChild(printHeaderEl('Ed &amp; Laura — Table Plan',
+        'Saturday 22 August 2026 · Exported ' + new Date().toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'}) + ' · ' + seatedCount + ' / ' + GUESTS.length + ' seated'));
 
-      groups.forEach(function(group){
-        var occupied = group.seats.filter(function(s){ return s.guest; });
-        html += '<table class="print-table"><thead><tr><th colspan="2">' + escapeHtml(group.label) + ' · ' + occupied.length + ' seated</th></tr>';
-        html += '<tr><th>Guest</th><th>Dietary requirement</th></tr></thead><tbody>';
-        if(occupied.length === 0){
-          html += '<tr><td colspan="2" class="print-empty-row">No one seated yet</td></tr>';
-        } else {
-          occupied.forEach(function(s){
-            var g = s.guest;
-            html += '<tr><td>' + escapeHtml(g.label) + (isHeadSeat(s.seatId) ? '<span class="print-head-tag">Head</span>' : '') + '</td><td>' + (g.dietary ? escapeHtml(g.dietary) : '—') + '</td></tr>';
-          });
-        }
-        html += '</tbody></table>';
-      });
+      var venue = document.createElement('div'); venue.className = 'pp-venue';
+      var ttLabel = document.createElement('div'); ttLabel.className = 'pp-top-table-label'; ttLabel.textContent = 'Top table';
+      var ttRow = document.createElement('div'); ttRow.className = 'top-tables-row';
+      ttRow.appendChild(buildPrintTopTableEl(false));
+      venue.appendChild(ttLabel);
+      venue.appendChild(ttRow);
+      var ltRow = document.createElement('div'); ltRow.className = 'long-tables-row';
+      for(var t=1;t<=4;t++){ ltRow.appendChild(buildPrintLongTableEl(t, false)); }
+      venue.appendChild(ltRow);
+      addEntranceLabels(ttRow, ltRow);
+      page.appendChild(venue);
+
+      var keyLine = document.createElement('div'); keyLine.className = 'print-footnote';
+      keyLine.textContent = 'Gold border marks the head of each table.';
+      page.appendChild(keyLine);
 
       var dietaryCount = GUESTS.filter(function(g){ return g.dietary; }).length;
-      html += '<div class="print-footnote">' + dietaryCount + ' guest(s) with a dietary note on file in total (seated and unseated).</div>';
-      return html;
+      var foot = document.createElement('div'); foot.className = 'print-footnote';
+      foot.textContent = dietaryCount + ' guest(s) with a dietary note on file in total (seated and unseated).';
+      page.appendChild(foot);
+      return page;
+    }
+
+    // Pages 2-6: one table per page, seats shown as they physically sit,
+    // each carrying the guest's name and dietary note.
+    function buildDetailPages(){
+      var defs = [
+        { label: 'Top table', capacity: 14, cls: 'pp-toptable', build: function(){ return buildPrintTopTableEl(true); } },
+        { label: 'Long table 1', capacity: 26, cls: 'pp-longtable', build: function(){ return buildPrintLongTableEl(1, true); } },
+        { label: 'Long table 2', capacity: 26, cls: 'pp-longtable', build: function(){ return buildPrintLongTableEl(2, true); } },
+        { label: 'Long table 3', capacity: 26, cls: 'pp-longtable', build: function(){ return buildPrintLongTableEl(3, true); } },
+        { label: 'Long table 4', capacity: 26, cls: 'pp-longtable', build: function(){ return buildPrintLongTableEl(4, true); } }
+      ];
+      return defs.map(function(def){
+        var seatedHere = SEAT_IDS.filter(function(seatId){ return tableLabelForSeat(seatId) === def.label && seating[seatId]; }).length;
+        var page = document.createElement('div'); page.className = 'pp-page pp-page-detail ' + def.cls;
+        page.appendChild(printHeaderEl(escapeHtml(def.label), seatedHere + ' / ' + def.capacity + ' seated'));
+        page.appendChild(def.build());
+        return page;
+      });
     }
 
     function exportPdf(){
       var printEl = document.getElementById('tablePlanPrint');
-      printEl.innerHTML = buildPrintable();
+      printEl.innerHTML = '';
+      printEl.appendChild(buildLayoutPage());
+      buildDetailPages().forEach(function(page){ printEl.appendChild(page); });
       document.body.classList.add('cc-print-mode');
       window.print();
     }
@@ -1514,6 +1754,12 @@
       poolEl.addEventListener('drop', function(e){
         var fromSeat = e.dataTransfer.getData('application/x-seat-id');
         if(fromSeat){ delete seating[fromSeat]; saveSeating(); renderAll(); }
+      });
+      // Tap-to-place: tapping empty pool space while something's selected
+      // unseats it. Chip clicks stopPropagation, so this only fires for taps
+      // that miss every chip.
+      poolEl.addEventListener('click', function(){
+        if(selected) placeSelectedAtPool();
       });
     }
 
@@ -1560,6 +1806,31 @@
     var saveRemote = ccDebounce(function(){
       ccApiPost('cricket', { assignments: assignment, otherRoles: otherRoles });
     }, 700);
+
+    // Tap-to-place: touch never fires HTML5 dragstart, so this is the touch
+    // (and mouse-click) equivalent of drag-and-drop - just the player's
+    // label, since unlike the table planner every "seat" here is named by
+    // (team, duration), not a fixed slot the player already occupies.
+    var selected = null;
+
+    function clearSelection(){
+      selected = null;
+      ccHideMoveBanner();
+      renderAll();
+    }
+
+    function selectPlayer(label){
+      if(selected === label){ clearSelection(); return; }
+      selected = label;
+      ccShowMoveBanner(label, clearSelection);
+      renderAll();
+    }
+
+    function placeSelected(teamKey, duration, beforeLabel){
+      if(!selected) return;
+      insertPlayer(selected, teamKey, duration, beforeLabel);
+      clearSelection();
+    }
 
     function sideClass(side){
       if(side === 'Ed') return 'side-ed';
@@ -1652,6 +1923,7 @@
     function makeChip(g, inTeam){
       var chip = document.createElement('div');
       chip.className = 'chip ' + sideClass(g.side);
+      chip.classList.toggle('cc-selected', selected === g.label);
       chip.draggable = true;
       var label = document.createElement('span');
       label.textContent = g.label;
@@ -1674,6 +1946,14 @@
         chip.classList.add('dragging');
       });
       chip.addEventListener('dragend', function(){ chip.classList.remove('dragging'); });
+      // Tap-to-place (pool chips only - inTeam rows use makeRosterItem's own
+      // click handler instead, which places rather than just picks up).
+      if(!inTeam){
+        chip.addEventListener('click', function(e){
+          e.stopPropagation();
+          selectPlayer(g.label);
+        });
+      }
       return chip;
     }
 
@@ -1690,6 +1970,7 @@
     function makeRosterItem(g, teamKey, duration){
       var li = document.createElement('div');
       li.className = 'roster-item ' + sideClass(g.side);
+      li.classList.toggle('cc-selected', selected === g.label);
       li.draggable = true;
 
       var row = document.createElement('span');
@@ -1766,6 +2047,18 @@
         var label = e.dataTransfer.getData('text/plain');
         if(!label || !guestByLabel[label] || label === g.label) return;
         insertPlayer(label, teamKey, duration, g.label);
+      });
+      // Tap-to-place: tapping this row picks up its player (nothing selected,
+      // or re-tapping the player you're already holding cancels), or - if
+      // holding a different player - places them just above this row,
+      // matching the drop-on-row behaviour above.
+      li.addEventListener('click', function(e){
+        e.stopPropagation();
+        if(selected && selected !== g.label){
+          placeSelected(teamKey, duration, g.label);
+        } else {
+          selectPlayer(g.label);
+        }
       });
       return li;
     }
@@ -1883,6 +2176,15 @@
         el.classList.remove('drag-over');
         var label = e.dataTransfer.getData('text/plain');
         if(!label || !guestByLabel[label]) return;
+        onDrop(label);
+      });
+      // Tap-to-place: chip/row clicks stopPropagation, so this only fires
+      // for taps that miss every one of them - i.e. this zone's background.
+      el.addEventListener('click', function(){
+        if(!selected) return;
+        var label = selected;
+        selected = null;
+        ccHideMoveBanner();
         onDrop(label);
       });
     }
@@ -2011,6 +2313,225 @@
 
         wireOnce();
         renderAll();
+      }
+    };
+  })();
+
+</script>
+<script>
+
+  // ---------- Day schedule (Apple-Calendar-style timeline) ----------
+  window.CCSchedule = (function(){
+    var TRACK_KEYS = ['ed', 'laura', 'groomsparty', 'bridal', 'family', 'guests'];
+    var TRACK_LABELS = { ed: 'Ed', laura: 'Laura', groomsparty: 'Groomsparty', bridal: 'Bridal Party', family: 'Family', guests: 'Guests' };
+
+    var PX_PER_MIN = 1;      // 1020min day → ~1020px of track, plus divider bands
+    var DIVIDER_H = 26;      // section-divider band height, in px
+    var MIN_BLOCK = 15;      // minutes - can't drag a block shorter than this
+    var SAVE_KEY = 'wedding-schedule-v1';
+
+    // Baked-in copy of the parsed schedule, exactly matching the seed row
+    // migrated into command_centre_state (key='schedule'). Used before that
+    // migration has run, or if the fetch fails and there's no local cache -
+    // same offline-fallback role DEFAULT_SCHEDULE plays for the other planner
+    // modules' localStorage snapshots.
+    var DEFAULT_SCHEDULE = {"dayStart": 420, "dayEnd": 1440, "sections": [{"start": 420, "label": "Morning — getting ready"}, {"start": 780, "label": "Ceremony"}, {"start": 840, "label": "Walk to the reception"}, {"start": 870, "label": "Drinks reception"}, {"start": 960, "label": "Speeches & wedding breakfast"}, {"start": 1140, "label": "Evening — dancing"}, {"start": 1380, "label": "Carriages"}], "location": [{"start": 420, "end": 435, "text": "Groomsmen's flat, Oxford / Dove House Farm", "flag": false, "flagNote": null}, {"start": 435, "end": 540, "text": "—", "flag": false, "flagNote": null}, {"start": 540, "end": 570, "text": "University Parks", "flag": false, "flagNote": null}, {"start": 570, "end": 585, "text": "Groomsmen's flat / cafe", "flag": false, "flagNote": null}, {"start": 585, "end": 630, "text": "—", "flag": false, "flagNote": null}, {"start": 630, "end": 645, "text": "Groomsmen's flat", "flag": false, "flagNote": null}, {"start": 645, "end": 690, "text": "—", "flag": false, "flagNote": null}, {"start": 690, "end": 705, "text": "Groomsmen's flat / Dove House Farm", "flag": false, "flagNote": null}, {"start": 705, "end": 750, "text": "—", "flag": false, "flagNote": null}, {"start": 750, "end": 765, "text": "Route to St Margaret's", "flag": false, "flagNote": null}, {"start": 765, "end": 840, "text": "St Margaret's Church", "flag": false, "flagNote": null}, {"start": 840, "end": 855, "text": "Port Meadow", "flag": false, "flagNote": null}, {"start": 855, "end": 870, "text": "Port Meadow → Medley Walled Garden", "flag": false, "flagNote": null}, {"start": 870, "end": 1410, "text": "Medley Walled Garden", "flag": false, "flagNote": null}, {"start": 1410, "end": 1425, "text": "Walton Well Car Park", "flag": false, "flagNote": null}, {"start": 1425, "end": 1440, "text": "—", "flag": false, "flagNote": null}], "tracks": {"ed": [{"start": 420, "end": 435, "text": "Asleep / free, at the groomsmen's flat", "flag": false, "flagNote": null}, {"start": 435, "end": 525, "text": "—", "flag": false, "flagNote": null}, {"start": 525, "end": 540, "text": "Waking, getting ready to run", "flag": false, "flagNote": null}, {"start": 540, "end": 555, "text": "Parkrun — University Parks", "flag": false, "flagNote": null}, {"start": 555, "end": 570, "text": "Parkrun continues", "flag": false, "flagNote": null}, {"start": 570, "end": 585, "text": "Post-parkrun breakfast", "flag": false, "flagNote": null}, {"start": 585, "end": 615, "text": "Breakfast continues", "flag": false, "flagNote": null}, {"start": 615, "end": 630, "text": "Breakfast winding down", "flag": false, "flagNote": null}, {"start": 630, "end": 675, "text": "Showers", "flag": false, "flagNote": null}, {"start": 675, "end": 690, "text": "Showers finishing", "flag": false, "flagNote": null}, {"start": 690, "end": 705, "text": "Dressing — into the suit", "flag": false, "flagNote": null}, {"start": 705, "end": 720, "text": "Dressing continues", "flag": false, "flagNote": null}, {"start": 720, "end": 735, "text": "Buttonholes, final prep", "flag": false, "flagNote": null}, {"start": 735, "end": 750, "text": "Final prep", "flag": false, "flagNote": null}, {"start": 750, "end": 765, "text": "Travel to church", "flag": false, "flagNote": null}, {"start": 765, "end": 780, "text": "Waiting at the altar", "flag": false, "flagNote": null}, {"start": 780, "end": 795, "text": "Ceremony begins", "flag": false, "flagNote": null}, {"start": 795, "end": 810, "text": "Readings & sermon", "flag": false, "flagNote": null}, {"start": 810, "end": 825, "text": "Vows & ring exchange", "flag": false, "flagNote": null}, {"start": 825, "end": 840, "text": "Married — church photos (est.)", "flag": false, "flagNote": null}, {"start": 840, "end": 855, "text": "Guided walk across Port Meadow", "flag": false, "flagNote": null}, {"start": 855, "end": 870, "text": "Arriving at the Medley", "flag": false, "flagNote": null}, {"start": 870, "end": 885, "text": "Welcome drinks & canapés", "flag": false, "flagNote": null}, {"start": 885, "end": 945, "text": "Drinks & canapés continue", "flag": false, "flagNote": null}, {"start": 945, "end": 960, "text": "Guests asked to find seats", "flag": false, "flagNote": null}, {"start": 960, "end": 990, "text": "Listening", "flag": false, "flagNote": null}, {"start": 990, "end": 1005, "text": "Starter served", "flag": false, "flagNote": null}, {"start": 1005, "end": 1020, "text": "Starter continues", "flag": false, "flagNote": null}, {"start": 1020, "end": 1035, "text": "Main served", "flag": false, "flagNote": null}, {"start": 1035, "end": 1050, "text": "Main continues", "flag": false, "flagNote": null}, {"start": 1050, "end": 1065, "text": "Listening", "flag": false, "flagNote": null}, {"start": 1065, "end": 1080, "text": "Speech 4 — Ed", "flag": false, "flagNote": null}, {"start": 1080, "end": 1095, "text": "Dessert served", "flag": false, "flagNote": null}, {"start": 1095, "end": 1110, "text": "Dessert continues", "flag": false, "flagNote": null}, {"start": 1110, "end": 1125, "text": "Listening", "flag": false, "flagNote": null}, {"start": 1125, "end": 1155, "text": "Mingling", "flag": false, "flagNote": null}, {"start": 1155, "end": 1170, "text": "First dance", "flag": true, "flagNote": null}, {"start": 1170, "end": 1200, "text": "Dancing", "flag": false, "flagNote": null}, {"start": 1200, "end": 1215, "text": "Dancing", "flag": true, "flagNote": null}, {"start": 1215, "end": 1260, "text": "Dancing", "flag": false, "flagNote": null}, {"start": 1260, "end": 1290, "text": "Dancing / food", "flag": false, "flagNote": null}, {"start": 1290, "end": 1365, "text": "Dancing", "flag": false, "flagNote": null}, {"start": 1365, "end": 1380, "text": "Last dances", "flag": false, "flagNote": null}, {"start": 1380, "end": 1395, "text": "Music finishes", "flag": false, "flagNote": null}, {"start": 1395, "end": 1410, "text": "Carriages", "flag": true, "flagNote": null}, {"start": 1410, "end": 1425, "text": "Departing", "flag": true, "flagNote": null}, {"start": 1425, "end": 1440, "text": "Day ends", "flag": false, "flagNote": null}], "laura": [{"start": 420, "end": 435, "text": "Hair & make-up begins", "flag": false, "flagNote": null}, {"start": 435, "end": 660, "text": "Hair & make-up continues", "flag": false, "flagNote": null}, {"start": 660, "end": 690, "text": "Hair & make-up finishing", "flag": false, "flagNote": null}, {"start": 690, "end": 705, "text": "Getting into the dress (est.)", "flag": false, "flagNote": null}, {"start": 705, "end": 720, "text": "Dress continues (est.)", "flag": false, "flagNote": null}, {"start": 720, "end": 750, "text": "Final touches (est.)", "flag": false, "flagNote": null}, {"start": 750, "end": 765, "text": "Bridal car to church (est.)", "flag": false, "flagNote": null}, {"start": 765, "end": 780, "text": "En route (est.)", "flag": false, "flagNote": null}, {"start": 780, "end": 795, "text": "Arrives, processes in", "flag": false, "flagNote": null}, {"start": 795, "end": 810, "text": "Readings & sermon", "flag": false, "flagNote": null}, {"start": 810, "end": 825, "text": "Vows & ring exchange", "flag": false, "flagNote": null}, {"start": 825, "end": 840, "text": "Married — church photos (est.)", "flag": false, "flagNote": null}, {"start": 840, "end": 855, "text": "Guided walk across Port Meadow", "flag": false, "flagNote": null}, {"start": 855, "end": 870, "text": "Arriving at the Medley", "flag": false, "flagNote": null}, {"start": 870, "end": 885, "text": "Welcome drinks & canapés", "flag": false, "flagNote": null}, {"start": 885, "end": 945, "text": "Drinks & canapés continue", "flag": false, "flagNote": null}, {"start": 945, "end": 960, "text": "Guests asked to find seats", "flag": false, "flagNote": null}, {"start": 960, "end": 975, "text": "Listening", "flag": false, "flagNote": null}, {"start": 975, "end": 990, "text": "Speech 2 — Laura", "flag": false, "flagNote": null}, {"start": 990, "end": 1005, "text": "Starter served", "flag": false, "flagNote": null}, {"start": 1005, "end": 1020, "text": "Starter continues", "flag": false, "flagNote": null}, {"start": 1020, "end": 1035, "text": "Main served", "flag": false, "flagNote": null}, {"start": 1035, "end": 1050, "text": "Main continues", "flag": false, "flagNote": null}, {"start": 1050, "end": 1080, "text": "Listening", "flag": false, "flagNote": null}, {"start": 1080, "end": 1095, "text": "Dessert served", "flag": false, "flagNote": null}, {"start": 1095, "end": 1110, "text": "Dessert continues", "flag": false, "flagNote": null}, {"start": 1110, "end": 1125, "text": "Listening", "flag": false, "flagNote": null}, {"start": 1125, "end": 1155, "text": "Mingling", "flag": false, "flagNote": null}, {"start": 1155, "end": 1170, "text": "First dance", "flag": true, "flagNote": null}, {"start": 1170, "end": 1200, "text": "Dancing", "flag": false, "flagNote": null}, {"start": 1200, "end": 1215, "text": "Dancing", "flag": true, "flagNote": null}, {"start": 1215, "end": 1260, "text": "Dancing", "flag": false, "flagNote": null}, {"start": 1260, "end": 1290, "text": "Dancing / food", "flag": false, "flagNote": null}, {"start": 1290, "end": 1365, "text": "Dancing", "flag": false, "flagNote": null}, {"start": 1365, "end": 1380, "text": "Last dances", "flag": false, "flagNote": null}, {"start": 1380, "end": 1395, "text": "Music finishes", "flag": false, "flagNote": null}, {"start": 1395, "end": 1410, "text": "Carriages", "flag": true, "flagNote": null}, {"start": 1410, "end": 1425, "text": "Departing", "flag": true, "flagNote": null}, {"start": 1425, "end": 1440, "text": "Day ends", "flag": false, "flagNote": null}], "groomsparty": [{"start": 420, "end": 435, "text": "Free, breakfast at the flat", "flag": false, "flagNote": null}, {"start": 435, "end": 525, "text": "—", "flag": false, "flagNote": null}, {"start": 525, "end": 540, "text": "Waking, getting ready to run", "flag": false, "flagNote": null}, {"start": 540, "end": 555, "text": "Parkrun with Ed", "flag": false, "flagNote": null}, {"start": 555, "end": 570, "text": "Parkrun continues", "flag": false, "flagNote": null}, {"start": 570, "end": 585, "text": "Post-parkrun breakfast", "flag": false, "flagNote": null}, {"start": 585, "end": 615, "text": "Breakfast continues", "flag": false, "flagNote": null}, {"start": 615, "end": 630, "text": "Breakfast winding down", "flag": false, "flagNote": null}, {"start": 630, "end": 675, "text": "Showers", "flag": false, "flagNote": null}, {"start": 675, "end": 690, "text": "Showers finishing", "flag": false, "flagNote": null}, {"start": 690, "end": 705, "text": "Dressing alongside Ed", "flag": false, "flagNote": null}, {"start": 705, "end": 720, "text": "Dressing continues", "flag": false, "flagNote": null}, {"start": 720, "end": 735, "text": "Buttonholes, final prep", "flag": false, "flagNote": null}, {"start": 735, "end": 750, "text": "Final prep", "flag": false, "flagNote": null}, {"start": 750, "end": 765, "text": "Travel to church with Ed", "flag": false, "flagNote": null}, {"start": 765, "end": 780, "text": "At the church with Ed; ushers (Danny Harford, Nick Mann) seat guests", "flag": false, "flagNote": null}, {"start": 780, "end": 795, "text": "Best men stand with Ed", "flag": false, "flagNote": null}, {"start": 795, "end": 810, "text": "Watching", "flag": false, "flagNote": null}, {"start": 810, "end": 825, "text": "Rings handed over", "flag": false, "flagNote": null}, {"start": 825, "end": 840, "text": "Photos (est.)", "flag": false, "flagNote": null}, {"start": 840, "end": 855, "text": "James West, Ed Kirwan, Tom Stevens & Elliot Greenwood guide as \"Port Meadow Sherpas\"", "flag": false, "flagNote": null}, {"start": 855, "end": 870, "text": "Arriving", "flag": false, "flagNote": null}, {"start": 870, "end": 885, "text": "Mingling", "flag": false, "flagNote": null}, {"start": 885, "end": 945, "text": "—", "flag": false, "flagNote": null}, {"start": 945, "end": 960, "text": "Finding seats", "flag": false, "flagNote": null}, {"start": 960, "end": 990, "text": "Listening", "flag": false, "flagNote": null}, {"start": 990, "end": 1005, "text": "Starter served", "flag": false, "flagNote": null}, {"start": 1005, "end": 1020, "text": "Starter continues", "flag": false, "flagNote": null}, {"start": 1020, "end": 1035, "text": "Main served", "flag": false, "flagNote": null}, {"start": 1035, "end": 1050, "text": "Main continues", "flag": false, "flagNote": null}, {"start": 1050, "end": 1080, "text": "Listening", "flag": false, "flagNote": null}, {"start": 1080, "end": 1095, "text": "Dessert served", "flag": false, "flagNote": null}, {"start": 1095, "end": 1110, "text": "Dessert continues", "flag": false, "flagNote": null}, {"start": 1110, "end": 1125, "text": "Speech 5 — Harry Wilson & George Rendall (joint)", "flag": false, "flagNote": null}, {"start": 1125, "end": 1155, "text": "Mingling", "flag": false, "flagNote": null}, {"start": 1155, "end": 1170, "text": "Watching", "flag": false, "flagNote": null}, {"start": 1170, "end": 1260, "text": "Dancing", "flag": false, "flagNote": null}, {"start": 1260, "end": 1290, "text": "Dancing / food", "flag": false, "flagNote": null}, {"start": 1290, "end": 1365, "text": "Dancing", "flag": false, "flagNote": null}, {"start": 1365, "end": 1380, "text": "Last dances", "flag": false, "flagNote": null}, {"start": 1380, "end": 1395, "text": "Music finishes", "flag": false, "flagNote": null}, {"start": 1395, "end": 1410, "text": "Carriages", "flag": false, "flagNote": null}, {"start": 1410, "end": 1425, "text": "Departing", "flag": false, "flagNote": null}, {"start": 1425, "end": 1440, "text": "Day ends", "flag": false, "flagNote": null}], "bridal": [{"start": 420, "end": 435, "text": "Hair & make-up alongside Laura", "flag": false, "flagNote": null}, {"start": 435, "end": 660, "text": "Hair & make-up continues", "flag": false, "flagNote": null}, {"start": 660, "end": 690, "text": "Hair & make-up finishing", "flag": false, "flagNote": null}, {"start": 690, "end": 705, "text": "Helping Laura into her dress (est.)", "flag": false, "flagNote": null}, {"start": 705, "end": 720, "text": "Continues (est.)", "flag": false, "flagNote": null}, {"start": 720, "end": 750, "text": "Final touches (est.)", "flag": false, "flagNote": null}, {"start": 750, "end": 765, "text": "Travel with Laura (est.)", "flag": false, "flagNote": null}, {"start": 765, "end": 780, "text": "With Laura (est.)", "flag": false, "flagNote": null}, {"start": 780, "end": 795, "text": "Process in with Laura", "flag": false, "flagNote": null}, {"start": 795, "end": 825, "text": "Watching", "flag": false, "flagNote": null}, {"start": 825, "end": 840, "text": "Photos (est.)", "flag": false, "flagNote": null}, {"start": 840, "end": 855, "text": "Walking with the group", "flag": false, "flagNote": null}, {"start": 855, "end": 870, "text": "Arriving", "flag": false, "flagNote": null}, {"start": 870, "end": 885, "text": "Mingling", "flag": false, "flagNote": null}, {"start": 885, "end": 945, "text": "—", "flag": false, "flagNote": null}, {"start": 945, "end": 960, "text": "Finding seats", "flag": false, "flagNote": null}, {"start": 960, "end": 990, "text": "Listening", "flag": false, "flagNote": null}, {"start": 990, "end": 1005, "text": "Starter served", "flag": false, "flagNote": null}, {"start": 1005, "end": 1020, "text": "Starter continues", "flag": false, "flagNote": null}, {"start": 1020, "end": 1035, "text": "Main served", "flag": false, "flagNote": null}, {"start": 1035, "end": 1050, "text": "Main continues", "flag": false, "flagNote": null}, {"start": 1050, "end": 1065, "text": "Speech 3 — Kate Harford, Maid of Honour", "flag": false, "flagNote": null}, {"start": 1065, "end": 1080, "text": "Listening", "flag": false, "flagNote": null}, {"start": 1080, "end": 1095, "text": "Dessert served", "flag": false, "flagNote": null}, {"start": 1095, "end": 1110, "text": "Dessert continues", "flag": false, "flagNote": null}, {"start": 1110, "end": 1125, "text": "Listening", "flag": false, "flagNote": null}, {"start": 1125, "end": 1155, "text": "Mingling", "flag": false, "flagNote": null}, {"start": 1155, "end": 1170, "text": "Watching", "flag": false, "flagNote": null}, {"start": 1170, "end": 1260, "text": "Dancing", "flag": false, "flagNote": null}, {"start": 1260, "end": 1290, "text": "Dancing / food", "flag": false, "flagNote": null}, {"start": 1290, "end": 1365, "text": "Dancing", "flag": false, "flagNote": null}, {"start": 1365, "end": 1380, "text": "Last dances", "flag": false, "flagNote": null}, {"start": 1380, "end": 1395, "text": "Music finishes", "flag": false, "flagNote": null}, {"start": 1395, "end": 1410, "text": "Carriages", "flag": false, "flagNote": null}, {"start": 1410, "end": 1425, "text": "Departing", "flag": false, "flagNote": null}, {"start": 1425, "end": 1440, "text": "Day ends", "flag": false, "flagNote": null}], "family": [{"start": 420, "end": 435, "text": "Travelling to Oxford / at accommodation", "flag": false, "flagNote": null}, {"start": 435, "end": 720, "text": "—", "flag": false, "flagNote": null}, {"start": 720, "end": 735, "text": "Travelling to church", "flag": false, "flagNote": null}, {"start": 735, "end": 750, "text": "—", "flag": false, "flagNote": null}, {"start": 750, "end": 765, "text": "Arrive by 12:45", "flag": false, "flagNote": null}, {"start": 765, "end": 780, "text": "Seated", "flag": false, "flagNote": null}, {"start": 780, "end": 795, "text": "Watching", "flag": false, "flagNote": null}, {"start": 795, "end": 810, "text": "Watching — Rebecca Green & Elliot Greenwood read, Toni Walsh reads the bible passage", "flag": false, "flagNote": null}, {"start": 810, "end": 825, "text": "Meg West & James West sign as witnesses", "flag": false, "flagNote": null}, {"start": 825, "end": 840, "text": "Photos (est.)", "flag": false, "flagNote": null}, {"start": 840, "end": 855, "text": "Walking, or taxi/drive via Binsey Lane", "flag": false, "flagNote": null}, {"start": 855, "end": 870, "text": "Arriving", "flag": false, "flagNote": null}, {"start": 870, "end": 885, "text": "Mingling", "flag": false, "flagNote": null}, {"start": 885, "end": 945, "text": "—", "flag": false, "flagNote": null}, {"start": 945, "end": 960, "text": "Finding seats", "flag": false, "flagNote": null}, {"start": 960, "end": 975, "text": "Speech 1 — Peter Harford, father of the bride", "flag": false, "flagNote": null}, {"start": 975, "end": 990, "text": "Listening", "flag": false, "flagNote": null}, {"start": 990, "end": 1005, "text": "Starter served", "flag": false, "flagNote": null}, {"start": 1005, "end": 1020, "text": "Starter continues", "flag": false, "flagNote": null}, {"start": 1020, "end": 1035, "text": "Main served", "flag": false, "flagNote": null}, {"start": 1035, "end": 1050, "text": "Main continues", "flag": false, "flagNote": null}, {"start": 1050, "end": 1080, "text": "Listening", "flag": false, "flagNote": null}, {"start": 1080, "end": 1095, "text": "Dessert served", "flag": false, "flagNote": null}, {"start": 1095, "end": 1110, "text": "Dessert continues", "flag": false, "flagNote": null}, {"start": 1110, "end": 1125, "text": "Listening", "flag": false, "flagNote": null}, {"start": 1125, "end": 1155, "text": "Mingling", "flag": false, "flagNote": null}, {"start": 1155, "end": 1170, "text": "Watching", "flag": false, "flagNote": null}, {"start": 1170, "end": 1260, "text": "Dancing", "flag": false, "flagNote": null}, {"start": 1260, "end": 1290, "text": "Dancing / food", "flag": false, "flagNote": null}, {"start": 1290, "end": 1365, "text": "Dancing", "flag": false, "flagNote": null}, {"start": 1365, "end": 1380, "text": "Last dances", "flag": false, "flagNote": null}, {"start": 1380, "end": 1395, "text": "Music finishes", "flag": false, "flagNote": null}, {"start": 1395, "end": 1410, "text": "Carriages", "flag": false, "flagNote": null}, {"start": 1410, "end": 1425, "text": "Departing", "flag": false, "flagNote": null}, {"start": 1425, "end": 1440, "text": "Day ends", "flag": false, "flagNote": null}], "guests": [{"start": 420, "end": 435, "text": "Travelling to Oxford", "flag": false, "flagNote": null}, {"start": 435, "end": 540, "text": "—", "flag": false, "flagNote": null}, {"start": 540, "end": 555, "text": "Optional — all welcome to join", "flag": false, "flagNote": null}, {"start": 555, "end": 570, "text": "Optional parkrun", "flag": false, "flagNote": null}, {"start": 570, "end": 720, "text": "—", "flag": false, "flagNote": null}, {"start": 720, "end": 735, "text": "Travelling to Oxford / church", "flag": false, "flagNote": null}, {"start": 735, "end": 750, "text": "—", "flag": false, "flagNote": null}, {"start": 750, "end": 765, "text": "Arrive by 12:45 — collect order of service, take seats", "flag": false, "flagNote": null}, {"start": 765, "end": 780, "text": "Seated", "flag": false, "flagNote": null}, {"start": 780, "end": 825, "text": "Watching", "flag": false, "flagNote": null}, {"start": 825, "end": 840, "text": "Filing out", "flag": false, "flagNote": null}, {"start": 840, "end": 855, "text": "Walking (~15 min, flat shoes recommended), or taxi/drive", "flag": false, "flagNote": null}, {"start": 855, "end": 870, "text": "Arriving", "flag": false, "flagNote": null}, {"start": 870, "end": 885, "text": "Welcome drinks & canapés, cocktail hour begins", "flag": false, "flagNote": null}, {"start": 885, "end": 945, "text": "Drinks & canapés continue", "flag": false, "flagNote": null}, {"start": 945, "end": 960, "text": "Finding seats", "flag": false, "flagNote": null}, {"start": 960, "end": 990, "text": "Listening", "flag": false, "flagNote": null}, {"start": 990, "end": 1005, "text": "Starter — peach & burrata salad", "flag": false, "flagNote": null}, {"start": 1005, "end": 1020, "text": "Starter continues", "flag": false, "flagNote": null}, {"start": 1020, "end": 1035, "text": "Main — sirloin off the Trailblazer BBQ, chimichurri, sides", "flag": false, "flagNote": null}, {"start": 1035, "end": 1050, "text": "Main continues", "flag": false, "flagNote": null}, {"start": 1050, "end": 1080, "text": "Listening", "flag": false, "flagNote": null}, {"start": 1080, "end": 1095, "text": "Dessert — chocolate cremeux with strawberries", "flag": false, "flagNote": null}, {"start": 1095, "end": 1110, "text": "Dessert continues", "flag": false, "flagNote": null}, {"start": 1110, "end": 1125, "text": "Listening", "flag": false, "flagNote": null}, {"start": 1125, "end": 1140, "text": "Cocktails resume, tables cleared", "flag": false, "flagNote": null}, {"start": 1140, "end": 1155, "text": "Cocktail hour", "flag": false, "flagNote": null}, {"start": 1155, "end": 1170, "text": "Watching — DJ music per the draft schedule", "flag": false, "flagNote": null}, {"start": 1170, "end": 1185, "text": "DJ music, dancefloor open", "flag": false, "flagNote": null}, {"start": 1185, "end": 1200, "text": "DJ music continues", "flag": false, "flagNote": null}, {"start": 1200, "end": 1215, "text": "Band \"Truly Medley Deeply\" first set begins", "flag": true, "flagNote": "also listed as first dance"}, {"start": 1215, "end": 1260, "text": "Band first set continues", "flag": false, "flagNote": null}, {"start": 1260, "end": 1275, "text": "DJ music & pizza (Medley's pizza oven)", "flag": false, "flagNote": null}, {"start": 1275, "end": 1290, "text": "Pizza & DJ continue", "flag": false, "flagNote": null}, {"start": 1290, "end": 1305, "text": "Band second set", "flag": false, "flagNote": null}, {"start": 1305, "end": 1335, "text": "Band second set continues", "flag": false, "flagNote": null}, {"start": 1335, "end": 1350, "text": "DJ music", "flag": false, "flagNote": null}, {"start": 1350, "end": 1380, "text": "DJ music continues", "flag": false, "flagNote": null}, {"start": 1380, "end": 1395, "text": "Music finishes", "flag": false, "flagNote": null}, {"start": 1395, "end": 1410, "text": "Carriages / guided walk to Jericho? — route marked as unconfirmed on Ed's draft", "flag": false, "flagNote": null}, {"start": 1410, "end": 1425, "text": "Taxis from Jericho? / guided twilight walk to Walton Well car park — also unconfirmed", "flag": false, "flagNote": null}, {"start": 1425, "end": 1440, "text": "Day ends", "flag": false, "flagNote": null}]}};
+
+    var state = null;
+
+    function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+    function isValidSchedule(payload){
+      return !!(payload && payload.tracks && TRACK_KEYS.every(function(k){
+        return Array.isArray(payload.tracks[k]) && payload.tracks[k].length > 0;
+      }));
+    }
+
+    function pad2(n){ return (n < 10 ? '0' : '') + n; }
+
+    function fmtTime(m){
+      if(m >= 1440) return '24:00';
+      return pad2(Math.floor(m / 60)) + ':' + pad2(m % 60);
+    }
+
+    function snap15(m){ return Math.round(m / 15) * 15; }
+
+    // Converts minutes-from-midnight to a vertical pixel offset. Each section
+    // divider takes up a fixed DIVIDER_H band of its own (not a span of time),
+    // so every divider whose start falls at-or-before t pushes everything
+    // after it down by one band's height.
+    function yFor(t){
+      var bands = 0;
+      for(var i = 0; i < state.sections.length; i++){
+        if(state.sections[i].start <= t) bands++;
+      }
+      return (t - state.dayStart) * PX_PER_MIN + bands * DIVIDER_H;
+    }
+
+    function totalHeight(){ return yFor(state.dayEnd); }
+
+    var saveRemote = ccDebounce(function(){
+      ccApiPost('schedule', state);
+    }, 700);
+
+    function persist(){
+      try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+      saveRemote();
+    }
+
+    function attachDrag(handle, trackKey, idx){
+      handle.addEventListener('pointerdown', function(e){
+        if(e.button !== undefined && e.button !== 0) return;
+        e.preventDefault();
+        var blocks = state.tracks[trackKey];
+        var startClientY = e.clientY;
+        var startBoundary = blocks[idx].end;
+        var minBoundary = blocks[idx].start + MIN_BLOCK;
+        var maxBoundary = blocks[idx + 1].end - MIN_BLOCK;
+        var pendingClientY = startClientY;
+        var rafId = null;
+        var changed = false;
+
+        function applyMove(){
+          rafId = null;
+          var deltaMin = (pendingClientY - startClientY) / PX_PER_MIN;
+          var next = snap15(startBoundary + deltaMin);
+          if(next < minBoundary) next = minBoundary;
+          if(next > maxBoundary) next = maxBoundary;
+          if(next < state.dayStart) next = state.dayStart;
+          if(next > state.dayEnd) next = state.dayEnd;
+          if(next !== blocks[idx].end){
+            blocks[idx].end = next;
+            blocks[idx + 1].start = next;
+            changed = true;
+            render();
+          }
+        }
+
+        function onMove(ev){
+          pendingClientY = ev.clientY;
+          if(rafId === null) rafId = requestAnimationFrame(applyMove);
+        }
+        function onUp(){
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+          if(changed) persist();
+        }
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+      });
+    }
+
+    function renderColumn(trackKey, blocks, draggable){
+      var col = document.createElement('div');
+      col.className = 'sched-tl-col' + (draggable ? '' : ' sched-tl-loc');
+      col.style.height = totalHeight() + 'px';
+
+      blocks.forEach(function(b, i){
+        var top = yFor(b.start), bottom = yFor(b.end);
+        var isEmpty = !b.text || b.text === '—' || b.text === '-';
+        var div = document.createElement('div');
+        div.className = 'sched-tl-block' + (isEmpty ? ' is-empty' : '') + (b.flag ? ' is-flagged' : '');
+        div.style.top = top + 'px';
+        div.style.height = Math.max(bottom - top, 0) + 'px';
+        if(!isEmpty){
+          if(b.flag){
+            var flagSpan = document.createElement('span');
+            flagSpan.className = 'flag';
+            flagSpan.textContent = '⚠';
+            div.appendChild(flagSpan);
+          }
+          var textSpan = document.createElement('span');
+          textSpan.textContent = b.text;
+          div.appendChild(textSpan);
+          div.title = (b.flag && b.flagNote) ? (b.text + ' — ' + b.flagNote) : (b.flag ? (b.text + ' — open question, not yet confirmed') : b.text);
+        }
+        col.appendChild(div);
+
+        if(draggable && i < blocks.length - 1){
+          var handle = document.createElement('div');
+          handle.className = 'sched-tl-handle';
+          handle.style.top = yFor(b.end) + 'px';
+          attachDrag(handle, trackKey, i);
+          col.appendChild(handle);
+        }
+      });
+
+      return col;
+    }
+
+    function render(){
+      var container = document.getElementById('scheduleTimeline');
+      if(!container || !state) return;
+
+      var inner = document.createElement('div');
+      inner.className = 'sched-tl-inner';
+
+      var header = document.createElement('div');
+      header.className = 'sched-tl-header';
+      var gutterHead = document.createElement('div');
+      gutterHead.className = 'sched-tl-cell sched-tl-gutter-cell';
+      header.appendChild(gutterHead);
+      TRACK_KEYS.forEach(function(k){
+        var cell = document.createElement('div');
+        cell.className = 'sched-tl-cell';
+        cell.textContent = TRACK_LABELS[k];
+        header.appendChild(cell);
+      });
+      var locHead = document.createElement('div');
+      locHead.className = 'sched-tl-cell sched-tl-loc-cell';
+      locHead.textContent = 'Location';
+      header.appendChild(locHead);
+      inner.appendChild(header);
+
+      var body = document.createElement('div');
+      body.className = 'sched-tl-body';
+      var h = totalHeight();
+      body.style.height = h + 'px';
+
+      var gutter = document.createElement('div');
+      gutter.className = 'sched-tl-gutter';
+      gutter.style.height = h + 'px';
+      for(var m = state.dayStart; m <= state.dayEnd; m += 60){
+        var label = document.createElement('div');
+        label.className = 'sched-tl-hour';
+        label.style.top = yFor(m) + 'px';
+        label.textContent = fmtTime(m);
+        gutter.appendChild(label);
+      }
+      body.appendChild(gutter);
+
+      for(var m2 = state.dayStart; m2 <= state.dayEnd; m2 += 60){
+        var line = document.createElement('div');
+        line.className = 'sched-tl-gridline';
+        line.style.top = yFor(m2) + 'px';
+        body.appendChild(line);
+      }
+
+      TRACK_KEYS.forEach(function(k){
+        body.appendChild(renderColumn(k, state.tracks[k] || [], true));
+      });
+      body.appendChild(renderColumn('location', state.location || [], false));
+
+      state.sections.forEach(function(sec, i){
+        var y0 = (sec.start - state.dayStart) * PX_PER_MIN + DIVIDER_H * i;
+        var band = document.createElement('div');
+        band.className = 'sched-tl-divider';
+        band.style.top = y0 + 'px';
+        band.style.height = DIVIDER_H + 'px';
+        band.textContent = sec.label;
+        body.appendChild(band);
+      });
+
+      inner.appendChild(body);
+      container.innerHTML = '';
+      container.appendChild(inner);
+    }
+
+    return {
+      init: function(payload){
+        state = isValidSchedule(payload) ? deepClone(payload) : deepClone(DEFAULT_SCHEDULE);
+        render();
       }
     };
   })();
