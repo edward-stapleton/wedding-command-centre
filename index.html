@@ -91,6 +91,36 @@
     padding:7px 13px;cursor:pointer;flex:0 0 auto;white-space:nowrap;
   }
 
+  /* ---------- Day Schedule edit modal ---------- */
+  .sched-edit-overlay{
+    position:fixed;inset:0;z-index:250;background:rgba(36,40,32,0.45);
+    display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .sched-edit-overlay[hidden]{display:none;}
+  .sched-edit-card{
+    background:var(--paper-raised);border-radius:14px;padding:22px 24px;
+    width:100%;max-width:380px;box-shadow:0 12px 40px rgba(0,0,0,0.3);
+  }
+  .sched-edit-meta{font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:14px;}
+  .sched-edit-label{display:block;font-size:0.78rem;font-weight:600;color:var(--ink-soft);margin-bottom:14px;}
+  .sched-edit-optional{font-weight:400;text-transform:none;letter-spacing:0;}
+  .sched-edit-input{
+    display:block;width:100%;margin-top:5px;font:inherit;font-size:0.92rem;padding:9px 11px;
+    border:1px solid var(--line-strong);border-radius:8px;background:var(--paper);color:var(--ink);
+  }
+  .sched-edit-input:focus-visible{outline:2px solid var(--accent-dark);outline-offset:1px;}
+  .sched-edit-check{display:flex;align-items:center;gap:8px;font-size:0.86rem;margin-bottom:14px;cursor:pointer;}
+  .sched-edit-actions{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;}
+  .sched-edit-spacer{flex:1 1 auto;}
+  .sched-edit-btn{
+    font:inherit;font-size:0.82rem;font-weight:600;padding:8px 14px;border-radius:8px;
+    border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);cursor:pointer;
+  }
+  .sched-edit-btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .sched-edit-btn-primary{background:var(--accent);border-color:var(--accent);color:var(--paper-raised);}
+  .sched-edit-btn-danger{color:var(--brick);border-color:var(--brick-soft);}
+  .sched-edit-btn-danger:hover:not(:disabled){background:var(--brick-soft);}
+
   main{max-width:1180px;margin:0 auto;padding:36px 28px 100px;}
   section{scroll-margin-top:76px;margin-bottom:64px;}
   .section-head{display:flex;align-items:baseline;gap:14px;margin-bottom:22px;flex-wrap:wrap;}
@@ -383,6 +413,9 @@
   .sched-tl-block.is-empty{border-color:transparent;background:none;}
   .sched-tl-block.is-flagged{border-color:var(--gold);background:var(--gold-soft);}
   .sched-tl-block .flag{margin-right:3px;}
+  .sched-tl-block.is-editable{cursor:pointer;}
+  .sched-tl-block.is-editable:hover{border-color:var(--accent-dark);box-shadow:0 0 0 1px var(--accent-dark);}
+  .sched-tl-block.is-editable.is-empty:hover{border-color:var(--accent-dark);background:var(--accent-soft);}
   .sched-tl-loc .sched-tl-block{background:var(--accent-soft);border-color:var(--line);color:var(--accent-dark);font-style:italic;}
   .sched-tl-loc .sched-tl-block.is-empty{background:none;}
 
@@ -553,6 +586,32 @@
 <div id="ccMoveBanner" class="cc-move-banner" hidden>
   <span class="cc-move-banner-text"></span>
   <button type="button" class="cc-move-banner-cancel">Cancel</button>
+</div>
+
+<!-- Day Schedule: tapping any block (in a person track, not the read-only
+     Location banner) opens this to edit its text/flag, split it into two,
+     or delete it - merging its time into the neighbouring block so every
+     track always stays fully packed from dayStart to dayEnd. -->
+<div id="scheduleEditModal" class="sched-edit-overlay" hidden>
+  <div class="sched-edit-card">
+    <div class="sched-edit-meta" id="schedEditMeta"></div>
+    <label class="sched-edit-label">Description
+      <input type="text" id="schedEditText" class="sched-edit-input" autocomplete="off" placeholder="e.g. Dancing">
+    </label>
+    <label class="sched-edit-check">
+      <input type="checkbox" id="schedEditFlag"> Flag as an open question
+    </label>
+    <label class="sched-edit-label" id="schedEditNoteRow">Note <span class="sched-edit-optional">(optional)</span>
+      <input type="text" id="schedEditNote" class="sched-edit-input" autocomplete="off" placeholder="e.g. clashes with the band's set">
+    </label>
+    <div class="sched-edit-actions">
+      <button type="button" id="schedEditDelete" class="sched-edit-btn sched-edit-btn-danger">Delete</button>
+      <button type="button" id="schedEditSplit" class="sched-edit-btn">Split in two</button>
+      <span class="sched-edit-spacer"></span>
+      <button type="button" id="schedEditCancel" class="sched-edit-btn">Cancel</button>
+      <button type="button" id="schedEditSave" class="sched-edit-btn sched-edit-btn-primary">Save</button>
+    </div>
+  </div>
 </div>
 
 <header class="masthead">
@@ -2379,6 +2438,107 @@
       saveRemote();
     }
 
+    // Add/edit/delete: tapping a block opens the shared modal (markup lives
+    // once in the page body, not rebuilt on every render). Only one block
+    // can be open at a time, tracked here by (track, index) rather than by
+    // DOM reference, since render() throws away and rebuilds every block
+    // element on every change.
+    var editingTrack = null;
+    var editingIndex = null;
+    var modalWired = false;
+
+    function openEditor(trackKey, idx){
+      var b = state.tracks[trackKey][idx];
+      if(!b) return;
+      editingTrack = trackKey;
+      editingIndex = idx;
+      var isEmpty = !b.text || b.text === '—' || b.text === '-';
+      document.getElementById('schedEditMeta').textContent = TRACK_LABELS[trackKey] + ' · ' + fmtTime(b.start) + '–' + fmtTime(b.end);
+      document.getElementById('schedEditText').value = isEmpty ? '' : b.text;
+      document.getElementById('schedEditFlag').checked = !!b.flag;
+      document.getElementById('schedEditNote').value = b.flagNote || '';
+      document.getElementById('schedEditNoteRow').style.display = b.flag ? '' : 'none';
+      document.getElementById('schedEditDelete').disabled = state.tracks[trackKey].length <= 1;
+      document.getElementById('schedEditSplit').disabled = (b.end - b.start) < MIN_BLOCK * 2;
+      document.getElementById('scheduleEditModal').hidden = false;
+      document.getElementById('schedEditText').focus();
+    }
+
+    function closeEditor(){
+      document.getElementById('scheduleEditModal').hidden = true;
+      editingTrack = null;
+      editingIndex = null;
+    }
+
+    function saveEditor(){
+      if(editingTrack === null) return;
+      var b = state.tracks[editingTrack][editingIndex];
+      var text = document.getElementById('schedEditText').value.trim();
+      b.text = text || '—';
+      b.flag = document.getElementById('schedEditFlag').checked;
+      var note = document.getElementById('schedEditNote').value.trim();
+      b.flagNote = (b.flag && note) ? note : null;
+      persist();
+      closeEditor();
+      render();
+    }
+
+    // Deleting a block folds its time into a neighbour so the track never
+    // develops a gap - into the previous block normally, or the next one
+    // if this is the very first block in the track.
+    function deleteEditingBlock(){
+      if(editingTrack === null) return;
+      var blocks = state.tracks[editingTrack];
+      if(blocks.length <= 1) return;
+      var idx = editingIndex;
+      if(idx > 0){
+        blocks[idx - 1].end = blocks[idx].end;
+      } else {
+        blocks[idx + 1].start = blocks[idx].start;
+      }
+      blocks.splice(idx, 1);
+      persist();
+      closeEditor();
+      render();
+    }
+
+    // Splitting divides one block into two at its midpoint (snapped to 15min,
+    // clamped so both halves respect MIN_BLOCK) - the new second half starts
+    // as a placeholder "New event" block ready to be tapped and renamed.
+    function splitEditingBlock(){
+      if(editingTrack === null) return;
+      var blocks = state.tracks[editingTrack];
+      var b = blocks[editingIndex];
+      if(b.end - b.start < MIN_BLOCK * 2) return;
+      var mid = snap15(b.start + (b.end - b.start) / 2);
+      mid = Math.max(b.start + MIN_BLOCK, Math.min(mid, b.end - MIN_BLOCK));
+      var newBlock = { start: mid, end: b.end, text: 'New event', flag: false, flagNote: null };
+      b.end = mid;
+      blocks.splice(editingIndex + 1, 0, newBlock);
+      persist();
+      closeEditor();
+      render();
+    }
+
+    function wireModalOnce(){
+      if(modalWired) return;
+      modalWired = true;
+      var overlay = document.getElementById('scheduleEditModal');
+      overlay.addEventListener('click', function(e){
+        if(e.target === overlay) closeEditor();
+      });
+      document.getElementById('schedEditFlag').addEventListener('change', function(e){
+        document.getElementById('schedEditNoteRow').style.display = e.target.checked ? '' : 'none';
+      });
+      document.getElementById('schedEditText').addEventListener('keydown', function(e){
+        if(e.key === 'Enter') saveEditor();
+      });
+      document.getElementById('schedEditCancel').addEventListener('click', closeEditor);
+      document.getElementById('schedEditSave').addEventListener('click', saveEditor);
+      document.getElementById('schedEditDelete').addEventListener('click', deleteEditingBlock);
+      document.getElementById('schedEditSplit').addEventListener('click', splitEditingBlock);
+    }
+
     function attachDrag(handle, trackKey, idx){
       handle.addEventListener('pointerdown', function(e){
         if(e.button !== undefined && e.button !== 0) return;
@@ -2445,6 +2605,13 @@
           textSpan.textContent = b.text;
           div.appendChild(textSpan);
           div.title = (b.flag && b.flagNote) ? (b.text + ' — ' + b.flagNote) : (b.flag ? (b.text + ' — open question, not yet confirmed') : b.text);
+        }
+        if(draggable){
+          div.classList.add('is-editable');
+          div.addEventListener('click', function(e){
+            e.stopPropagation();
+            openEditor(trackKey, i);
+          });
         }
         col.appendChild(div);
 
@@ -2531,6 +2698,7 @@
     return {
       init: function(payload){
         state = isValidSchedule(payload) ? deepClone(payload) : deepClone(DEFAULT_SCHEDULE);
+        wireModalOnce();
         render();
       }
     };
