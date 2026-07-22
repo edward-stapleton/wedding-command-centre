@@ -376,6 +376,14 @@
   /* ---------- Schedule ---------- */
   .sched-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:0.78rem;color:var(--ink-soft);margin-bottom:14px;}
   .sched-legend .flag{margin-right:4px;}
+  .sched-day-tabs{display:flex;gap:4px;margin-bottom:14px;}
+  .sched-day-tabs button{
+    font-family:var(--sans);font-size:0.82rem;font-weight:600;
+    background:none;border:1px solid var(--line-strong);color:var(--ink-soft);
+    padding:7px 16px;border-radius:7px;cursor:pointer;transition:all .15s ease;
+  }
+  .sched-day-tabs button:hover{color:var(--ink);background:var(--accent-soft);}
+  .sched-day-tabs button.active{color:var(--paper-raised);background:var(--accent);border-color:var(--accent);}
 
   /* Day-view timeline (Apple-Calendar-style): one absolutely-positioned
      column per track, blocks sized proportionally to duration. Only the
@@ -478,34 +486,40 @@
   .pp-entrance-row{display:flex;align-items:center;gap:3mm;}
 
   /* Pages 2-6: one table per page, seats shown exactly as they physically
-     sit, each carrying the guest's name and dietary note. */
+     sit, each carrying the guest's name and dietary note. The top table
+     detail page is flipped 90° from how it sits in the room - two columns
+     running down the portrait page, same rig as a long table - so each
+     seat gets a full-width box instead of being squeezed 14-across. */
   .pp-page-detail{display:flex;flex-direction:column;align-items:center;}
   .pp-page-detail .long-table-title{display:none;}
-  .pp-page-detail .tt-unit{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:3mm;}
-  .pp-page-detail .tt-mid{display:flex;flex-direction:column;gap:3mm;}
-  .pp-page-detail .tt-row{display:flex;gap:2mm;}
-  .pp-page-detail .tt-seg{display:flex;gap:2mm;padding-right:4mm;margin-right:4mm;border-right:1px dashed var(--line-strong);}
-  .pp-page-detail .tt-seg:last-child{border-right:none;margin-right:0;padding-right:0;}
-  .pp-page-detail .tt-surface{height:2px;margin:2mm 0;background:var(--line-strong);width:100%;}
   .pp-page-detail .long-table-rig{display:flex;flex-direction:column;align-items:center;gap:3mm;}
   .pp-page-detail .long-table-body{display:flex;flex-direction:row;gap:8mm;align-items:center;}
   .pp-page-detail .lt-col{display:flex;flex-direction:column;gap:2mm;}
   .pp-page-detail .lt-segment{display:flex;flex-direction:column;gap:2mm;padding-bottom:3.5mm;margin-bottom:3.5mm;border-bottom:1px dashed var(--line-strong);}
   .pp-page-detail .lt-segment:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
   .pp-page-detail .lt-surface{width:2px;align-self:stretch;background:var(--line-strong);}
+  .pp-page-detail .tt-col-labels{display:flex;gap:8mm;justify-content:center;margin-bottom:1mm;}
+  .pp-page-detail .tt-col-labels .pp-side-label{width:55mm;text-align:center;font-size:0.7rem;font-weight:700;}
   .pp-page-detail .seat{
     box-sizing:border-box;
     border:1.5px dashed var(--line-strong);border-radius:6px;background:var(--paper);
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     text-align:center;padding:1.2mm 2mm;color:var(--ink-soft);font-size:0.7rem;flex:0 0 auto;
   }
-  .pp-page-detail.pp-toptable .seat{width:19mm;min-height:12mm;}
+  .pp-page-detail.pp-toptable .seat{width:55mm;min-height:12mm;}
   .pp-page-detail.pp-longtable .seat{width:55mm;min-height:8mm;}
   .pp-page-detail .seat.head{border-color:var(--gold);}
   .pp-page-detail .seat.filled{border-style:solid;}
   .pp-page-detail .seat.pp-empty{font-style:italic;}
   .pp-seat-name{font-weight:600;color:var(--ink);font-size:0.85rem;}
   .pp-seat-diet{font-size:0.72rem;color:var(--gold);margin-top:0.5mm;}
+
+  /* Side A / Side B labels - same pair of names used on the page-1 floor
+     schematic (beside each row) and the flipped top-table detail page
+     (above each column), so the two pages map onto each other. */
+  .pp-side-label{letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-soft);}
+  .pp-venue .tt-row-wrap{display:flex;align-items:center;gap:1.5mm;}
+  .pp-venue .pp-side-label{font-size:0.5rem;white-space:nowrap;}
 
   @media print{
     body.cc-print-mode #authGate,
@@ -929,7 +943,7 @@
 <section id="schedule">
   <div class="section-head">
     <h2>Day Schedule</h2>
-    <span class="section-tag">Saturday 22 August 2026 · drag a boundary to reschedule</span>
+    <span class="section-tag" id="scheduleDayTag">Saturday 22 August 2026 · drag a boundary to reschedule</span>
   </div>
   <p class="lede">Built from the venue/vendor-facing "Schedule" tab, the wedding-party role assignments, and the narrative weekend plan. <span class="flag">Flagged blocks</span> are genuine open questions still on Ed's draft, not confirmed plans.</p>
   <div class="sched-legend">
@@ -937,6 +951,7 @@
     <span><strong>Bridal Party</strong> = Maid of Honour, Bridesmaids &amp; Bridesman</span>
     <span><span class="flag">⚠</span> = open question, not yet confirmed</span>
   </div>
+  <div class="sched-day-tabs" id="scheduleDayTabs"></div>
 
   <div id="scheduleTimeline" class="sched-timeline"></div>
 </section>
@@ -1661,27 +1676,66 @@
       return el;
     }
 
-    // Same seat/segment structure as buildVenue()'s top-table unit, rebuilt
-    // as plain (non-interactive) elements for print.
+    // Page 1 (showDetail false): same footprint as buildVenue()'s top-table
+    // unit, just plain elements - a floor-plan schematic matching how the
+    // table physically sits in the room, with Side A / Side B labelled
+    // against each row so it maps onto the flipped detail page below.
+    //
+    // Page 2 (showDetail true): flipped 90° into the same two-column rig a
+    // long table uses (two segments deep instead of four), so each seat
+    // gets a full-width box on the portrait page instead of being squeezed
+    // 14-across - which is what was cramming dietary notes into the seat.
     function buildPrintTopTableEl(showDetail){
-      var unit = document.createElement('div'); unit.className = 'tt-unit';
-      var mid = document.createElement('div'); mid.className = 'tt-mid';
-      var rowA = document.createElement('div'); rowA.className = 'tt-row';
-      var rowB = document.createElement('div'); rowB.className = 'tt-row';
-      for(var s=1;s<=2;s++){
-        var segA = document.createElement('div'); segA.className = 'tt-seg';
-        for(var i=1;i<=3;i++){ segA.appendChild(makePrintSeatEl('tt-s'+s+'-a'+i, showDetail)); }
-        rowA.appendChild(segA);
-        var segB = document.createElement('div'); segB.className = 'tt-seg';
-        for(var i=1;i<=3;i++){ segB.appendChild(makePrintSeatEl('tt-s'+s+'-b'+i, showDetail)); }
-        rowB.appendChild(segB);
+      if(!showDetail){
+        var unit = document.createElement('div'); unit.className = 'tt-unit';
+        var mid = document.createElement('div'); mid.className = 'tt-mid';
+        var rowA = document.createElement('div'); rowA.className = 'tt-row';
+        var rowB = document.createElement('div'); rowB.className = 'tt-row';
+        for(var s=1;s<=2;s++){
+          var segA = document.createElement('div'); segA.className = 'tt-seg';
+          for(var i=1;i<=3;i++){ segA.appendChild(makePrintSeatEl('tt-s'+s+'-a'+i, false)); }
+          rowA.appendChild(segA);
+          var segB = document.createElement('div'); segB.className = 'tt-seg';
+          for(var i=1;i<=3;i++){ segB.appendChild(makePrintSeatEl('tt-s'+s+'-b'+i, false)); }
+          rowB.appendChild(segB);
+        }
+        var ttSurface = document.createElement('div'); ttSurface.className = 'tt-surface';
+        var rowAWrap = document.createElement('div'); rowAWrap.className = 'tt-row-wrap';
+        var labelA = document.createElement('div'); labelA.className = 'pp-side-label'; labelA.textContent = 'Side A';
+        rowAWrap.appendChild(labelA); rowAWrap.appendChild(rowA);
+        var rowBWrap = document.createElement('div'); rowBWrap.className = 'tt-row-wrap';
+        var labelB = document.createElement('div'); labelB.className = 'pp-side-label'; labelB.textContent = 'Side B';
+        rowBWrap.appendChild(labelB); rowBWrap.appendChild(rowB);
+        mid.appendChild(rowAWrap); mid.appendChild(ttSurface); mid.appendChild(rowBWrap);
+        unit.appendChild(makePrintSeatEl('tt-h1', false));
+        unit.appendChild(mid);
+        unit.appendChild(makePrintSeatEl('tt-h2', false));
+        return unit;
       }
-      var ttSurface = document.createElement('div'); ttSurface.className = 'tt-surface';
-      mid.appendChild(rowA); mid.appendChild(ttSurface); mid.appendChild(rowB);
-      unit.appendChild(makePrintSeatEl('tt-h1', showDetail));
-      unit.appendChild(mid);
-      unit.appendChild(makePrintSeatEl('tt-h2', showDetail));
-      return unit;
+
+      var rig = document.createElement('div'); rig.className = 'long-table-rig';
+      var colLabels = document.createElement('div'); colLabels.className = 'tt-col-labels';
+      var colLabelA = document.createElement('div'); colLabelA.className = 'pp-side-label'; colLabelA.textContent = 'Side A';
+      var colLabelB = document.createElement('div'); colLabelB.className = 'pp-side-label'; colLabelB.textContent = 'Side B';
+      colLabels.appendChild(colLabelA); colLabels.appendChild(colLabelB);
+      var body = document.createElement('div'); body.className = 'long-table-body';
+      var colA = document.createElement('div'); colA.className = 'lt-col';
+      var colB = document.createElement('div'); colB.className = 'lt-col';
+      for(var s2=1;s2<=2;s2++){
+        var vsegA = document.createElement('div'); vsegA.className = 'lt-segment';
+        for(var i2=1;i2<=3;i2++){ vsegA.appendChild(makePrintSeatEl('tt-s'+s2+'-a'+i2, true)); }
+        colA.appendChild(vsegA);
+        var vsegB = document.createElement('div'); vsegB.className = 'lt-segment';
+        for(var i3=1;i3<=3;i3++){ vsegB.appendChild(makePrintSeatEl('tt-s'+s2+'-b'+i3, true)); }
+        colB.appendChild(vsegB);
+      }
+      var vsurf = document.createElement('div'); vsurf.className = 'lt-surface';
+      body.appendChild(colA); body.appendChild(vsurf); body.appendChild(colB);
+      rig.appendChild(makePrintSeatEl('tt-h1', true));
+      rig.appendChild(colLabels);
+      rig.appendChild(body);
+      rig.appendChild(makePrintSeatEl('tt-h2', true));
+      return rig;
     }
 
     // Same structure as buildVenue()'s long-table block, rebuilt for print.
@@ -1756,7 +1810,7 @@
       page.appendChild(venue);
 
       var keyLine = document.createElement('div'); keyLine.className = 'print-footnote';
-      keyLine.textContent = 'Gold border marks the head of each table.';
+      keyLine.textContent = 'Gold border marks the head of each table. Top table Side A / Side B match the seat-by-seat page overleaf, flipped to portrait.';
       page.appendChild(keyLine);
 
       var dietaryCount = GUESTS.filter(function(g){ return g.dietary; }).length;
@@ -2394,17 +2448,49 @@
     // migration has run, or if the fetch fails and there's no local cache -
     // same offline-fallback role DEFAULT_SCHEDULE plays for the other planner
     // modules' localStorage snapshots.
-    var DEFAULT_SCHEDULE = {"dayEnd":1440,"tracks":{"ed":[{"end":435,"flag":false,"text":"Asleep / free, at the groomsmen's flat","start":420,"flagNote":null},{"end":525,"flag":false,"text":"—","start":435,"flagNote":null},{"end":540,"flag":false,"text":"Waking, getting ready to run","start":525,"flagNote":null},{"end":570,"flag":false,"text":"Parkrun — University Parks","start":540,"flagNote":null},{"end":630,"flag":false,"text":"Post-parkrun breakfast","start":570,"flagNote":null},{"end":690,"flag":false,"text":"Showers","start":630,"flagNote":null},{"end":720,"flag":false,"text":"Dressing — into the suit","start":690,"flagNote":null},{"end":735,"flag":false,"text":"Buttonholes, final prep","start":720,"flagNote":null},{"end":750,"flag":false,"text":"Final prep","start":735,"flagNote":null},{"end":765,"flag":false,"text":"Travel to church","start":750,"flagNote":null},{"end":780,"flag":false,"text":"Waiting at the altar","start":765,"flagNote":null},{"end":795,"flag":false,"text":"Ceremony begins","start":780,"flagNote":null},{"end":810,"flag":false,"text":"Readings & sermon","start":795,"flagNote":null},{"end":825,"flag":false,"text":"Vows & ring exchange","start":810,"flagNote":null},{"end":840,"flag":false,"text":"Married — church photos (est.)","start":825,"flagNote":null},{"end":855,"flag":false,"text":"Guided walk across Port Meadow","start":840,"flagNote":null},{"end":870,"flag":false,"text":"Arriving at the Medley","start":855,"flagNote":null},{"end":945,"flag":false,"text":"Welcome drinks & canapés","start":870,"flagNote":null},{"end":960,"flag":false,"text":"Guests asked to find seats","start":945,"flagNote":null},{"end":990,"flag":false,"text":"Listening","start":960,"flagNote":null},{"end":1020,"flag":false,"text":"Starter","start":990,"flagNote":null},{"end":1050,"flag":false,"text":"Main","start":1020,"flagNote":null},{"end":1065,"flag":false,"text":"Listening","start":1050,"flagNote":null},{"end":1080,"flag":false,"text":"Speech 4 — Ed","start":1065,"flagNote":null},{"end":1110,"flag":false,"text":"Dessert","start":1080,"flagNote":null},{"end":1125,"flag":false,"text":"Listening","start":1110,"flagNote":null},{"end":1155,"flag":false,"text":"Mingling","start":1125,"flagNote":null},{"end":1170,"flag":true,"text":"First dance","start":1155,"flagNote":null},{"end":1200,"flag":false,"text":"Dancing","start":1170,"flagNote":null},{"end":1215,"flag":true,"text":"Dancing","start":1200,"flagNote":null},{"end":1260,"flag":false,"text":"Dancing","start":1215,"flagNote":null},{"end":1290,"flag":false,"text":"Dancing / food","start":1260,"flagNote":null},{"end":1365,"flag":false,"text":"Dancing","start":1290,"flagNote":null},{"end":1380,"flag":false,"text":"Last dances","start":1365,"flagNote":null},{"end":1395,"flag":false,"text":"Music finishes","start":1380,"flagNote":null},{"end":1410,"flag":true,"text":"Carriages","start":1395,"flagNote":null},{"end":1425,"flag":true,"text":"Departing","start":1410,"flagNote":null},{"end":1440,"flag":false,"text":"Day ends","start":1425,"flagNote":null}],"laura":[{"end":690,"flag":false,"text":"Hair & make-up begins","start":420,"flagNote":null},{"end":720,"flag":false,"text":"Getting into the dress (est.)","start":690,"flagNote":null},{"end":750,"flag":false,"text":"Final touches (est.)","start":720,"flagNote":null},{"end":765,"flag":false,"text":"Bridal car to church (est.)","start":750,"flagNote":null},{"end":780,"flag":false,"text":"En route (est.)","start":765,"flagNote":null},{"end":795,"flag":false,"text":"Arrives, processes in","start":780,"flagNote":null},{"end":810,"flag":false,"text":"Readings & sermon","start":795,"flagNote":null},{"end":825,"flag":false,"text":"Vows & ring exchange","start":810,"flagNote":null},{"end":840,"flag":false,"text":"Married — church photos (est.)","start":825,"flagNote":null},{"end":855,"flag":false,"text":"Guided walk across Port Meadow","start":840,"flagNote":null},{"end":870,"flag":false,"text":"Arriving at the Medley","start":855,"flagNote":null},{"end":945,"flag":false,"text":"Welcome drinks & canapés","start":870,"flagNote":null},{"end":960,"flag":false,"text":"Guests asked to find seats","start":945,"flagNote":null},{"end":975,"flag":false,"text":"Listening","start":960,"flagNote":null},{"end":990,"flag":false,"text":"Speech 2 — Laura","start":975,"flagNote":null},{"end":1020,"flag":false,"text":"Starter","start":990,"flagNote":null},{"end":1050,"flag":false,"text":"Main","start":1020,"flagNote":null},{"end":1080,"flag":false,"text":"Listening","start":1050,"flagNote":null},{"end":1110,"flag":false,"text":"Dessert","start":1080,"flagNote":null},{"end":1125,"flag":false,"text":"Listening","start":1110,"flagNote":null},{"end":1155,"flag":false,"text":"Mingling","start":1125,"flagNote":null},{"end":1170,"flag":true,"text":"First dance","start":1155,"flagNote":null},{"end":1200,"flag":false,"text":"Dancing","start":1170,"flagNote":null},{"end":1215,"flag":true,"text":"Dancing","start":1200,"flagNote":null},{"end":1260,"flag":false,"text":"Dancing","start":1215,"flagNote":null},{"end":1290,"flag":false,"text":"Dancing / food","start":1260,"flagNote":null},{"end":1365,"flag":false,"text":"Dancing","start":1290,"flagNote":null},{"end":1380,"flag":false,"text":"Last dances","start":1365,"flagNote":null},{"end":1395,"flag":false,"text":"Music finishes","start":1380,"flagNote":null},{"end":1410,"flag":true,"text":"Carriages","start":1395,"flagNote":null},{"end":1425,"flag":true,"text":"Departing","start":1410,"flagNote":null},{"end":1440,"flag":false,"text":"Day ends","start":1425,"flagNote":null}],"bridal":[{"end":690,"flag":false,"text":"Hair & make-up alongside Laura","start":420,"flagNote":null},{"end":720,"flag":false,"text":"Helping Laura into her dress (est.)","start":690,"flagNote":null},{"end":750,"flag":false,"text":"Final touches (est.)","start":720,"flagNote":null},{"end":765,"flag":false,"text":"Travel with Laura (est.)","start":750,"flagNote":null},{"end":780,"flag":false,"text":"With Laura (est.)","start":765,"flagNote":null},{"end":795,"flag":false,"text":"Process in with Laura","start":780,"flagNote":null},{"end":825,"flag":false,"text":"Watching","start":795,"flagNote":null},{"end":840,"flag":false,"text":"Photos (est.)","start":825,"flagNote":null},{"end":855,"flag":false,"text":"Walking with the group","start":840,"flagNote":null},{"end":870,"flag":false,"text":"Arriving","start":855,"flagNote":null},{"end":885,"flag":false,"text":"Mingling","start":870,"flagNote":null},{"end":945,"flag":false,"text":"—","start":885,"flagNote":null},{"end":960,"flag":false,"text":"Finding seats","start":945,"flagNote":null},{"end":990,"flag":false,"text":"Listening","start":960,"flagNote":null},{"end":1020,"flag":false,"text":"Starter","start":990,"flagNote":null},{"end":1050,"flag":false,"text":"Main","start":1020,"flagNote":null},{"end":1065,"flag":false,"text":"Speech 3 — Kate Harford, Maid of Honour","start":1050,"flagNote":null},{"end":1080,"flag":false,"text":"Listening","start":1065,"flagNote":null},{"end":1110,"flag":false,"text":"Dessert","start":1080,"flagNote":null},{"end":1125,"flag":false,"text":"Listening","start":1110,"flagNote":null},{"end":1155,"flag":false,"text":"Mingling","start":1125,"flagNote":null},{"end":1170,"flag":false,"text":"Watching","start":1155,"flagNote":null},{"end":1260,"flag":false,"text":"Dancing","start":1170,"flagNote":null},{"end":1290,"flag":false,"text":"Dancing / food","start":1260,"flagNote":null},{"end":1365,"flag":false,"text":"Dancing","start":1290,"flagNote":null},{"end":1380,"flag":false,"text":"Last dances","start":1365,"flagNote":null},{"end":1395,"flag":false,"text":"Music finishes","start":1380,"flagNote":null},{"end":1410,"flag":false,"text":"Carriages","start":1395,"flagNote":null},{"end":1425,"flag":false,"text":"Departing","start":1410,"flagNote":null},{"end":1440,"flag":false,"text":"Day ends","start":1425,"flagNote":null}],"family":[{"end":435,"flag":false,"text":"Travelling to Oxford / at accommodation","start":420,"flagNote":null},{"end":720,"flag":false,"text":"—","start":435,"flagNote":null},{"end":735,"flag":false,"text":"Travelling to church","start":720,"flagNote":null},{"end":750,"flag":false,"text":"—","start":735,"flagNote":null},{"end":765,"flag":false,"text":"Arrive by 12:45","start":750,"flagNote":null},{"end":780,"flag":false,"text":"Seated","start":765,"flagNote":null},{"end":795,"flag":false,"text":"Watching","start":780,"flagNote":null},{"end":810,"flag":false,"text":"Watching — Rebecca Green & Elliot Greenwood read, Toni Walsh reads the bible passage","start":795,"flagNote":null},{"end":825,"flag":false,"text":"Meg West & James West sign as witnesses","start":810,"flagNote":null},{"end":840,"flag":false,"text":"Photos (est.)","start":825,"flagNote":null},{"end":855,"flag":false,"text":"Walking, or taxi/drive via Binsey Lane","start":840,"flagNote":null},{"end":870,"flag":false,"text":"Arriving","start":855,"flagNote":null},{"end":885,"flag":false,"text":"Mingling","start":870,"flagNote":null},{"end":945,"flag":false,"text":"—","start":885,"flagNote":null},{"end":960,"flag":false,"text":"Finding seats","start":945,"flagNote":null},{"end":975,"flag":false,"text":"Speech 1 — Peter Harford, father of the bride","start":960,"flagNote":null},{"end":990,"flag":false,"text":"Listening","start":975,"flagNote":null},{"end":1020,"flag":false,"text":"Starter","start":990,"flagNote":null},{"end":1050,"flag":false,"text":"Main","start":1020,"flagNote":null},{"end":1080,"flag":false,"text":"Listening","start":1050,"flagNote":null},{"end":1110,"flag":false,"text":"Dessert","start":1080,"flagNote":null},{"end":1125,"flag":false,"text":"Listening","start":1110,"flagNote":null},{"end":1155,"flag":false,"text":"Mingling","start":1125,"flagNote":null},{"end":1170,"flag":false,"text":"Watching","start":1155,"flagNote":null},{"end":1260,"flag":false,"text":"Dancing","start":1170,"flagNote":null},{"end":1290,"flag":false,"text":"Dancing / food","start":1260,"flagNote":null},{"end":1365,"flag":false,"text":"Dancing","start":1290,"flagNote":null},{"end":1380,"flag":false,"text":"Last dances","start":1365,"flagNote":null},{"end":1395,"flag":false,"text":"Music finishes","start":1380,"flagNote":null},{"end":1410,"flag":false,"text":"Carriages","start":1395,"flagNote":null},{"end":1425,"flag":false,"text":"Departing","start":1410,"flagNote":null},{"end":1440,"flag":false,"text":"Day ends","start":1425,"flagNote":null}],"guests":[{"end":435,"flag":false,"text":"Travelling to Oxford","start":420,"flagNote":null},{"end":540,"flag":false,"text":"—","start":435,"flagNote":null},{"end":555,"flag":false,"text":"Optional — all welcome to join","start":540,"flagNote":null},{"end":570,"flag":false,"text":"Optional parkrun","start":555,"flagNote":null},{"end":720,"flag":false,"text":"—","start":570,"flagNote":null},{"end":735,"flag":false,"text":"Travelling to Oxford / church","start":720,"flagNote":null},{"end":750,"flag":false,"text":"—","start":735,"flagNote":null},{"end":765,"flag":false,"text":"Arrive by 12:45 — collect order of service, take seats","start":750,"flagNote":null},{"end":780,"flag":false,"text":"Seated","start":765,"flagNote":null},{"end":825,"flag":false,"text":"Watching","start":780,"flagNote":null},{"end":840,"flag":false,"text":"Filing out","start":825,"flagNote":null},{"end":855,"flag":false,"text":"Walking (~15 min, flat shoes recommended), or taxi/drive","start":840,"flagNote":null},{"end":870,"flag":false,"text":"Arriving","start":855,"flagNote":null},{"end":945,"flag":false,"text":"Welcome drinks & canapés, cocktail hour begins","start":870,"flagNote":null},{"end":960,"flag":false,"text":"Finding seats","start":945,"flagNote":null},{"end":990,"flag":false,"text":"Listening","start":960,"flagNote":null},{"end":1020,"flag":false,"text":"Starter — peach & burrata salad","start":990,"flagNote":null},{"end":1050,"flag":false,"text":"Main — sirloin off the Trailblazer BBQ, chimichurri, sides","start":1020,"flagNote":null},{"end":1080,"flag":false,"text":"Listening","start":1050,"flagNote":null},{"end":1110,"flag":false,"text":"Dessert — chocolate cremeux with strawberries","start":1080,"flagNote":null},{"end":1125,"flag":false,"text":"Listening","start":1110,"flagNote":null},{"end":1140,"flag":false,"text":"Cocktails resume, tables cleared","start":1125,"flagNote":null},{"end":1155,"flag":false,"text":"Cocktail hour","start":1140,"flagNote":null},{"end":1170,"flag":false,"text":"Watching — DJ music per the draft schedule","start":1155,"flagNote":null},{"end":1200,"flag":false,"text":"DJ music, dancefloor open","start":1170,"flagNote":null},{"end":1260,"flag":true,"text":"Band \"Truly Medley Deeply\" first set begins","start":1200,"flagNote":"also listed as first dance"},{"end":1290,"flag":false,"text":"DJ music & pizza (Medley's pizza oven)","start":1260,"flagNote":null},{"end":1335,"flag":false,"text":"Band second set","start":1290,"flagNote":null},{"end":1380,"flag":false,"text":"DJ music","start":1335,"flagNote":null},{"end":1395,"flag":false,"text":"Music finishes","start":1380,"flagNote":null},{"end":1410,"flag":false,"text":"Carriages / guided walk to Jericho? — route marked as unconfirmed on Ed's draft","start":1395,"flagNote":null},{"end":1425,"flag":false,"text":"Taxis from Jericho? / guided twilight walk to Walton Well car park — also unconfirmed","start":1410,"flagNote":null},{"end":1440,"flag":false,"text":"Day ends","start":1425,"flagNote":null}],"groomsparty":[{"end":435,"flag":false,"text":"Free, breakfast at the flat","start":420,"flagNote":null},{"end":525,"flag":false,"text":"—","start":435,"flagNote":null},{"end":540,"flag":false,"text":"Waking, getting ready to run","start":525,"flagNote":null},{"end":570,"flag":false,"text":"Parkrun with Ed","start":540,"flagNote":null},{"end":630,"flag":false,"text":"Post-parkrun breakfast","start":570,"flagNote":null},{"end":690,"flag":false,"text":"Showers","start":630,"flagNote":null},{"end":720,"flag":false,"text":"Dressing alongside Ed","start":690,"flagNote":null},{"end":735,"flag":false,"text":"Buttonholes, final prep","start":720,"flagNote":null},{"end":750,"flag":false,"text":"Final prep","start":735,"flagNote":null},{"end":765,"flag":false,"text":"Travel to church with Ed","start":750,"flagNote":null},{"end":780,"flag":false,"text":"At the church with Ed; ushers (Danny Harford, Nick Mann) seat guests","start":765,"flagNote":null},{"end":795,"flag":false,"text":"Best men stand with Ed","start":780,"flagNote":null},{"end":810,"flag":false,"text":"Watching","start":795,"flagNote":null},{"end":825,"flag":false,"text":"Rings handed over","start":810,"flagNote":null},{"end":840,"flag":false,"text":"Photos (est.)","start":825,"flagNote":null},{"end":855,"flag":false,"text":"James West, Ed Kirwan, Tom Stevens & Elliot Greenwood guide as \"Port Meadow Sherpas\"","start":840,"flagNote":null},{"end":870,"flag":false,"text":"Arriving","start":855,"flagNote":null},{"end":885,"flag":false,"text":"Mingling","start":870,"flagNote":null},{"end":945,"flag":false,"text":"—","start":885,"flagNote":null},{"end":960,"flag":false,"text":"Finding seats","start":945,"flagNote":null},{"end":990,"flag":false,"text":"Listening","start":960,"flagNote":null},{"end":1020,"flag":false,"text":"Starter","start":990,"flagNote":null},{"end":1050,"flag":false,"text":"Main","start":1020,"flagNote":null},{"end":1080,"flag":false,"text":"Listening","start":1050,"flagNote":null},{"end":1110,"flag":false,"text":"Dessert","start":1080,"flagNote":null},{"end":1125,"flag":false,"text":"Speech 5 — Harry Wilson & George Rendall (joint)","start":1110,"flagNote":null},{"end":1155,"flag":false,"text":"Mingling","start":1125,"flagNote":null},{"end":1170,"flag":false,"text":"Watching","start":1155,"flagNote":null},{"end":1260,"flag":false,"text":"Dancing","start":1170,"flagNote":null},{"end":1290,"flag":false,"text":"Dancing / food","start":1260,"flagNote":null},{"end":1365,"flag":false,"text":"Dancing","start":1290,"flagNote":null},{"end":1380,"flag":false,"text":"Last dances","start":1365,"flagNote":null},{"end":1395,"flag":false,"text":"Music finishes","start":1380,"flagNote":null},{"end":1410,"flag":false,"text":"Carriages","start":1395,"flagNote":null},{"end":1425,"flag":false,"text":"Departing","start":1410,"flagNote":null},{"end":1440,"flag":false,"text":"Day ends","start":1425,"flagNote":null}]},"dayStart":420,"location":[{"end":435,"flag":false,"text":"Groomsmen's flat, Oxford / Dove House Farm","start":420,"flagNote":null},{"end":540,"flag":false,"text":"—","start":435,"flagNote":null},{"end":570,"flag":false,"text":"University Parks","start":540,"flagNote":null},{"end":585,"flag":false,"text":"Groomsmen's flat / cafe","start":570,"flagNote":null},{"end":630,"flag":false,"text":"—","start":585,"flagNote":null},{"end":645,"flag":false,"text":"Groomsmen's flat","start":630,"flagNote":null},{"end":690,"flag":false,"text":"—","start":645,"flagNote":null},{"end":705,"flag":false,"text":"Groomsmen's flat / Dove House Farm","start":690,"flagNote":null},{"end":750,"flag":false,"text":"—","start":705,"flagNote":null},{"end":765,"flag":false,"text":"Route to St Margaret's","start":750,"flagNote":null},{"end":840,"flag":false,"text":"St Margaret's Church","start":765,"flagNote":null},{"end":855,"flag":false,"text":"Port Meadow","start":840,"flagNote":null},{"end":870,"flag":false,"text":"Port Meadow → Medley Walled Garden","start":855,"flagNote":null},{"end":1410,"flag":false,"text":"Medley Walled Garden","start":870,"flagNote":null},{"end":1425,"flag":false,"text":"Walton Well Car Park","start":1410,"flagNote":null},{"end":1440,"flag":false,"text":"—","start":1425,"flagNote":null}],"sections":[{"label":"Morning — getting ready","start":420},{"label":"Ceremony","start":780},{"label":"Walk to the reception","start":840},{"label":"Drinks reception","start":870},{"label":"Speeches & wedding breakfast","start":960},{"label":"Evening — dancing","start":1140},{"label":"Carriages","start":1380}]};
+    var SATURDAY_SCHEDULE = {"dayEnd":1440,"tracks":{"ed":[{"end":435,"flag":false,"text":"Asleep / free, at the groomsmen's flat","start":420,"flagNote":null},{"end":525,"flag":false,"text":"—","start":435,"flagNote":null},{"end":540,"flag":false,"text":"Waking, getting ready to run","start":525,"flagNote":null},{"end":570,"flag":false,"text":"Parkrun — University Parks","start":540,"flagNote":null},{"end":630,"flag":false,"text":"Post-parkrun breakfast","start":570,"flagNote":null},{"end":690,"flag":false,"text":"Showers","start":630,"flagNote":null},{"end":720,"flag":false,"text":"Dressing — into the suit","start":690,"flagNote":null},{"end":735,"flag":false,"text":"Buttonholes, final prep","start":720,"flagNote":null},{"end":750,"flag":false,"text":"Final prep","start":735,"flagNote":null},{"end":765,"flag":false,"text":"Travel to church","start":750,"flagNote":null},{"end":780,"flag":false,"text":"Waiting at the altar","start":765,"flagNote":null},{"end":795,"flag":false,"text":"Ceremony begins","start":780,"flagNote":null},{"end":810,"flag":false,"text":"Readings & sermon","start":795,"flagNote":null},{"end":825,"flag":false,"text":"Vows & ring exchange","start":810,"flagNote":null},{"end":840,"flag":false,"text":"Married — church photos (est.)","start":825,"flagNote":null},{"end":855,"flag":false,"text":"Guided walk across Port Meadow","start":840,"flagNote":null},{"end":870,"flag":false,"text":"Arriving at the Medley","start":855,"flagNote":null},{"end":945,"flag":false,"text":"Welcome drinks & canapés","start":870,"flagNote":null},{"end":960,"flag":false,"text":"Guests asked to find seats","start":945,"flagNote":null},{"end":990,"flag":false,"text":"Listening","start":960,"flagNote":null},{"end":1020,"flag":false,"text":"Starter","start":990,"flagNote":null},{"end":1050,"flag":false,"text":"Main","start":1020,"flagNote":null},{"end":1065,"flag":false,"text":"Listening","start":1050,"flagNote":null},{"end":1080,"flag":false,"text":"Speech 4 — Ed","start":1065,"flagNote":null},{"end":1110,"flag":false,"text":"Dessert","start":1080,"flagNote":null},{"end":1125,"flag":false,"text":"Listening","start":1110,"flagNote":null},{"end":1155,"flag":false,"text":"Mingling","start":1125,"flagNote":null},{"end":1170,"flag":true,"text":"First dance","start":1155,"flagNote":null},{"end":1200,"flag":false,"text":"Dancing","start":1170,"flagNote":null},{"end":1215,"flag":true,"text":"Dancing","start":1200,"flagNote":null},{"end":1260,"flag":false,"text":"Dancing","start":1215,"flagNote":null},{"end":1290,"flag":false,"text":"Dancing / food","start":1260,"flagNote":null},{"end":1365,"flag":false,"text":"Dancing","start":1290,"flagNote":null},{"end":1380,"flag":false,"text":"Last dances","start":1365,"flagNote":null},{"end":1395,"flag":false,"text":"Music finishes","start":1380,"flagNote":null},{"end":1410,"flag":true,"text":"Carriages","start":1395,"flagNote":null},{"end":1425,"flag":true,"text":"Departing","start":1410,"flagNote":null},{"end":1440,"flag":false,"text":"Day ends","start":1425,"flagNote":null}],"laura":[{"end":690,"flag":false,"text":"Hair & make-up begins","start":420,"flagNote":null},{"end":720,"flag":false,"text":"Getting into the dress (est.)","start":690,"flagNote":null},{"end":750,"flag":false,"text":"Final touches (est.)","start":720,"flagNote":null},{"end":765,"flag":false,"text":"Bridal car to church (est.)","start":750,"flagNote":null},{"end":780,"flag":false,"text":"En route (est.)","start":765,"flagNote":null},{"end":795,"flag":false,"text":"Arrives, processes in","start":780,"flagNote":null},{"end":810,"flag":false,"text":"Readings & sermon","start":795,"flagNote":null},{"end":825,"flag":false,"text":"Vows & ring exchange","start":810,"flagNote":null},{"end":840,"flag":false,"text":"Married — church photos (est.)","start":825,"flagNote":null},{"end":855,"flag":false,"text":"Guided walk across Port Meadow","start":840,"flagNote":null},{"end":870,"flag":false,"text":"Arriving at the Medley","start":855,"flagNote":null},{"end":945,"flag":false,"text":"Welcome drinks & canapés","start":870,"flagNote":null},{"end":960,"flag":false,"text":"Guests asked to find seats","start":945,"flagNote":null},{"end":975,"flag":false,"text":"Listening","start":960,"flagNote":null},{"end":990,"flag":false,"text":"Speech 2 — Laura","start":975,"flagNote":null},{"end":1020,"flag":false,"text":"Starter","start":990,"flagNote":null},{"end":1050,"flag":false,"text":"Main","start":1020,"flagNote":null},{"end":1080,"flag":false,"text":"Listening","start":1050,"flagNote":null},{"end":1110,"flag":false,"text":"Dessert","start":1080,"flagNote":null},{"end":1125,"flag":false,"text":"Listening","start":1110,"flagNote":null},{"end":1155,"flag":false,"text":"Mingling","start":1125,"flagNote":null},{"end":1170,"flag":true,"text":"First dance","start":1155,"flagNote":null},{"end":1200,"flag":false,"text":"Dancing","start":1170,"flagNote":null},{"end":1215,"flag":true,"text":"Dancing","start":1200,"flagNote":null},{"end":1260,"flag":false,"text":"Dancing","start":1215,"flagNote":null},{"end":1290,"flag":false,"text":"Dancing / food","start":1260,"flagNote":null},{"end":1365,"flag":false,"text":"Dancing","start":1290,"flagNote":null},{"end":1380,"flag":false,"text":"Last dances","start":1365,"flagNote":null},{"end":1395,"flag":false,"text":"Music finishes","start":1380,"flagNote":null},{"end":1410,"flag":true,"text":"Carriages","start":1395,"flagNote":null},{"end":1425,"flag":true,"text":"Departing","start":1410,"flagNote":null},{"end":1440,"flag":false,"text":"Day ends","start":1425,"flagNote":null}],"bridal":[{"end":690,"flag":false,"text":"Hair & make-up alongside Laura","start":420,"flagNote":null},{"end":720,"flag":false,"text":"Helping Laura into her dress (est.)","start":690,"flagNote":null},{"end":750,"flag":false,"text":"Final touches (est.)","start":720,"flagNote":null},{"end":765,"flag":false,"text":"Travel with Laura (est.)","start":750,"flagNote":null},{"end":780,"flag":false,"text":"With Laura (est.)","start":765,"flagNote":null},{"end":795,"flag":false,"text":"Process in with Laura","start":780,"flagNote":null},{"end":825,"flag":false,"text":"Watching","start":795,"flagNote":null},{"end":840,"flag":false,"text":"Photos (est.)","start":825,"flagNote":null},{"end":855,"flag":false,"text":"Walking with the group","start":840,"flagNote":null},{"end":870,"flag":false,"text":"Arriving","start":855,"flagNote":null},{"end":885,"flag":false,"text":"Mingling","start":870,"flagNote":null},{"end":945,"flag":false,"text":"—","start":885,"flagNote":null},{"end":960,"flag":false,"text":"Finding seats","start":945,"flagNote":null},{"end":990,"flag":false,"text":"Listening","start":960,"flagNote":null},{"end":1020,"flag":false,"text":"Starter","start":990,"flagNote":null},{"end":1050,"flag":false,"text":"Main","start":1020,"flagNote":null},{"end":1065,"flag":false,"text":"Speech 3 — Kate Harford, Maid of Honour","start":1050,"flagNote":null},{"end":1080,"flag":false,"text":"Listening","start":1065,"flagNote":null},{"end":1110,"flag":false,"text":"Dessert","start":1080,"flagNote":null},{"end":1125,"flag":false,"text":"Listening","start":1110,"flagNote":null},{"end":1155,"flag":false,"text":"Mingling","start":1125,"flagNote":null},{"end":1170,"flag":false,"text":"Watching","start":1155,"flagNote":null},{"end":1260,"flag":false,"text":"Dancing","start":1170,"flagNote":null},{"end":1290,"flag":false,"text":"Dancing / food","start":1260,"flagNote":null},{"end":1365,"flag":false,"text":"Dancing","start":1290,"flagNote":null},{"end":1380,"flag":false,"text":"Last dances","start":1365,"flagNote":null},{"end":1395,"flag":false,"text":"Music finishes","start":1380,"flagNote":null},{"end":1410,"flag":false,"text":"Carriages","start":1395,"flagNote":null},{"end":1425,"flag":false,"text":"Departing","start":1410,"flagNote":null},{"end":1440,"flag":false,"text":"Day ends","start":1425,"flagNote":null}],"family":[{"end":435,"flag":false,"text":"Travelling to Oxford / at accommodation","start":420,"flagNote":null},{"end":720,"flag":false,"text":"—","start":435,"flagNote":null},{"end":735,"flag":false,"text":"Travelling to church","start":720,"flagNote":null},{"end":750,"flag":false,"text":"—","start":735,"flagNote":null},{"end":765,"flag":false,"text":"Arrive by 12:45","start":750,"flagNote":null},{"end":780,"flag":false,"text":"Seated","start":765,"flagNote":null},{"end":795,"flag":false,"text":"Watching","start":780,"flagNote":null},{"end":810,"flag":false,"text":"Watching — Rebecca Green & Elliot Greenwood read, Toni Walsh reads the bible passage","start":795,"flagNote":null},{"end":825,"flag":false,"text":"Meg West & James West sign as witnesses","start":810,"flagNote":null},{"end":840,"flag":false,"text":"Photos (est.)","start":825,"flagNote":null},{"end":855,"flag":false,"text":"Walking, or taxi/drive via Binsey Lane","start":840,"flagNote":null},{"end":870,"flag":false,"text":"Arriving","start":855,"flagNote":null},{"end":885,"flag":false,"text":"Mingling","start":870,"flagNote":null},{"end":945,"flag":false,"text":"—","start":885,"flagNote":null},{"end":960,"flag":false,"text":"Finding seats","start":945,"flagNote":null},{"end":975,"flag":false,"text":"Speech 1 — Peter Harford, father of the bride","start":960,"flagNote":null},{"end":990,"flag":false,"text":"Listening","start":975,"flagNote":null},{"end":1020,"flag":false,"text":"Starter","start":990,"flagNote":null},{"end":1050,"flag":false,"text":"Main","start":1020,"flagNote":null},{"end":1080,"flag":false,"text":"Listening","start":1050,"flagNote":null},{"end":1110,"flag":false,"text":"Dessert","start":1080,"flagNote":null},{"end":1125,"flag":false,"text":"Listening","start":1110,"flagNote":null},{"end":1155,"flag":false,"text":"Mingling","start":1125,"flagNote":null},{"end":1170,"flag":false,"text":"Watching","start":1155,"flagNote":null},{"end":1260,"flag":false,"text":"Dancing","start":1170,"flagNote":null},{"end":1290,"flag":false,"text":"Dancing / food","start":1260,"flagNote":null},{"end":1365,"flag":false,"text":"Dancing","start":1290,"flagNote":null},{"end":1380,"flag":false,"text":"Last dances","start":1365,"flagNote":null},{"end":1395,"flag":false,"text":"Music finishes","start":1380,"flagNote":null},{"end":1410,"flag":false,"text":"Carriages","start":1395,"flagNote":null},{"end":1425,"flag":false,"text":"Departing","start":1410,"flagNote":null},{"end":1440,"flag":false,"text":"Day ends","start":1425,"flagNote":null}],"guests":[{"end":435,"flag":false,"text":"Travelling to Oxford","start":420,"flagNote":null},{"end":540,"flag":false,"text":"—","start":435,"flagNote":null},{"end":555,"flag":false,"text":"Optional — all welcome to join","start":540,"flagNote":null},{"end":570,"flag":false,"text":"Optional parkrun","start":555,"flagNote":null},{"end":720,"flag":false,"text":"—","start":570,"flagNote":null},{"end":735,"flag":false,"text":"Travelling to Oxford / church","start":720,"flagNote":null},{"end":750,"flag":false,"text":"—","start":735,"flagNote":null},{"end":765,"flag":false,"text":"Arrive by 12:45 — collect order of service, take seats","start":750,"flagNote":null},{"end":780,"flag":false,"text":"Seated","start":765,"flagNote":null},{"end":825,"flag":false,"text":"Watching","start":780,"flagNote":null},{"end":840,"flag":false,"text":"Filing out","start":825,"flagNote":null},{"end":855,"flag":false,"text":"Walking (~15 min, flat shoes recommended), or taxi/drive","start":840,"flagNote":null},{"end":870,"flag":false,"text":"Arriving","start":855,"flagNote":null},{"end":945,"flag":false,"text":"Welcome drinks & canapés, cocktail hour begins","start":870,"flagNote":null},{"end":960,"flag":false,"text":"Finding seats","start":945,"flagNote":null},{"end":990,"flag":false,"text":"Listening","start":960,"flagNote":null},{"end":1020,"flag":false,"text":"Starter — peach & burrata salad","start":990,"flagNote":null},{"end":1050,"flag":false,"text":"Main — sirloin off the Trailblazer BBQ, chimichurri, sides","start":1020,"flagNote":null},{"end":1080,"flag":false,"text":"Listening","start":1050,"flagNote":null},{"end":1110,"flag":false,"text":"Dessert — chocolate cremeux with strawberries","start":1080,"flagNote":null},{"end":1125,"flag":false,"text":"Listening","start":1110,"flagNote":null},{"end":1140,"flag":false,"text":"Cocktails resume, tables cleared","start":1125,"flagNote":null},{"end":1155,"flag":false,"text":"Cocktail hour","start":1140,"flagNote":null},{"end":1170,"flag":false,"text":"Watching — DJ music per the draft schedule","start":1155,"flagNote":null},{"end":1200,"flag":false,"text":"DJ music, dancefloor open","start":1170,"flagNote":null},{"end":1260,"flag":true,"text":"Band \"Truly Medley Deeply\" first set begins","start":1200,"flagNote":"also listed as first dance"},{"end":1290,"flag":false,"text":"DJ music & pizza (Medley's pizza oven)","start":1260,"flagNote":null},{"end":1335,"flag":false,"text":"Band second set","start":1290,"flagNote":null},{"end":1380,"flag":false,"text":"DJ music","start":1335,"flagNote":null},{"end":1395,"flag":false,"text":"Music finishes","start":1380,"flagNote":null},{"end":1410,"flag":false,"text":"Carriages / guided walk to Jericho? — route marked as unconfirmed on Ed's draft","start":1395,"flagNote":null},{"end":1425,"flag":false,"text":"Taxis from Jericho? / guided twilight walk to Walton Well car park — also unconfirmed","start":1410,"flagNote":null},{"end":1440,"flag":false,"text":"Day ends","start":1425,"flagNote":null}],"groomsparty":[{"end":435,"flag":false,"text":"Free, breakfast at the flat","start":420,"flagNote":null},{"end":525,"flag":false,"text":"—","start":435,"flagNote":null},{"end":540,"flag":false,"text":"Waking, getting ready to run","start":525,"flagNote":null},{"end":570,"flag":false,"text":"Parkrun with Ed","start":540,"flagNote":null},{"end":630,"flag":false,"text":"Post-parkrun breakfast","start":570,"flagNote":null},{"end":690,"flag":false,"text":"Showers","start":630,"flagNote":null},{"end":720,"flag":false,"text":"Dressing alongside Ed","start":690,"flagNote":null},{"end":735,"flag":false,"text":"Buttonholes, final prep","start":720,"flagNote":null},{"end":750,"flag":false,"text":"Final prep","start":735,"flagNote":null},{"end":765,"flag":false,"text":"Travel to church with Ed","start":750,"flagNote":null},{"end":780,"flag":false,"text":"At the church with Ed; ushers (Danny Harford, Nick Mann) seat guests","start":765,"flagNote":null},{"end":795,"flag":false,"text":"Best men stand with Ed","start":780,"flagNote":null},{"end":810,"flag":false,"text":"Watching","start":795,"flagNote":null},{"end":825,"flag":false,"text":"Rings handed over","start":810,"flagNote":null},{"end":840,"flag":false,"text":"Photos (est.)","start":825,"flagNote":null},{"end":855,"flag":false,"text":"James West, Ed Kirwan, Tom Stevens & Elliot Greenwood guide as \"Port Meadow Sherpas\"","start":840,"flagNote":null},{"end":870,"flag":false,"text":"Arriving","start":855,"flagNote":null},{"end":885,"flag":false,"text":"Mingling","start":870,"flagNote":null},{"end":945,"flag":false,"text":"—","start":885,"flagNote":null},{"end":960,"flag":false,"text":"Finding seats","start":945,"flagNote":null},{"end":990,"flag":false,"text":"Listening","start":960,"flagNote":null},{"end":1020,"flag":false,"text":"Starter","start":990,"flagNote":null},{"end":1050,"flag":false,"text":"Main","start":1020,"flagNote":null},{"end":1080,"flag":false,"text":"Listening","start":1050,"flagNote":null},{"end":1110,"flag":false,"text":"Dessert","start":1080,"flagNote":null},{"end":1125,"flag":false,"text":"Speech 5 — Harry Wilson & George Rendall (joint)","start":1110,"flagNote":null},{"end":1155,"flag":false,"text":"Mingling","start":1125,"flagNote":null},{"end":1170,"flag":false,"text":"Watching","start":1155,"flagNote":null},{"end":1260,"flag":false,"text":"Dancing","start":1170,"flagNote":null},{"end":1290,"flag":false,"text":"Dancing / food","start":1260,"flagNote":null},{"end":1365,"flag":false,"text":"Dancing","start":1290,"flagNote":null},{"end":1380,"flag":false,"text":"Last dances","start":1365,"flagNote":null},{"end":1395,"flag":false,"text":"Music finishes","start":1380,"flagNote":null},{"end":1410,"flag":false,"text":"Carriages","start":1395,"flagNote":null},{"end":1425,"flag":false,"text":"Departing","start":1410,"flagNote":null},{"end":1440,"flag":false,"text":"Day ends","start":1425,"flagNote":null}]},"dayStart":420,"location":[{"end":435,"flag":false,"text":"Groomsmen's flat, Oxford / Dove House Farm","start":420,"flagNote":null},{"end":540,"flag":false,"text":"—","start":435,"flagNote":null},{"end":570,"flag":false,"text":"University Parks","start":540,"flagNote":null},{"end":585,"flag":false,"text":"Groomsmen's flat / cafe","start":570,"flagNote":null},{"end":630,"flag":false,"text":"—","start":585,"flagNote":null},{"end":645,"flag":false,"text":"Groomsmen's flat","start":630,"flagNote":null},{"end":690,"flag":false,"text":"—","start":645,"flagNote":null},{"end":705,"flag":false,"text":"Groomsmen's flat / Dove House Farm","start":690,"flagNote":null},{"end":750,"flag":false,"text":"—","start":705,"flagNote":null},{"end":765,"flag":false,"text":"Route to St Margaret's","start":750,"flagNote":null},{"end":840,"flag":false,"text":"St Margaret's Church","start":765,"flagNote":null},{"end":855,"flag":false,"text":"Port Meadow","start":840,"flagNote":null},{"end":870,"flag":false,"text":"Port Meadow → Medley Walled Garden","start":855,"flagNote":null},{"end":1410,"flag":false,"text":"Medley Walled Garden","start":870,"flagNote":null},{"end":1425,"flag":false,"text":"Walton Well Car Park","start":1410,"flagNote":null},{"end":1440,"flag":false,"text":"—","start":1425,"flagNote":null}],"sections":[{"label":"Morning — getting ready","start":420},{"label":"Ceremony","start":780},{"label":"Walk to the reception","start":840},{"label":"Drinks reception","start":870},{"label":"Speeches & wedding breakfast","start":960},{"label":"Evening — dancing","start":1140},{"label":"Carriages","start":1380}]};
+    SATURDAY_SCHEDULE.key = 'saturday';
+    SATURDAY_SCHEDULE.label = 'Saturday 22 August 2026';
+
+    // Friday and Sunday are lighter-weight than the wedding day itself, so
+    // these are hand-authored rather than pulled from a spreadsheet import -
+    // times as given by Ed 22 Jul 2026 (rehearsal, drop-off, cricket setup),
+    // finish times not yet fixed so those are flagged like the rest of the app's
+    // genuine open questions.
+    var FRIDAY_SCHEDULE = {"key":"friday","label":"Friday 21 August 2026","dayStart":480,"dayEnd":1320,"tracks":{"ed":[{"start":480,"end":540,"text":"Free morning, at the groomsmen's flat","flag":false,"flagNote":null},{"start":540,"end":600,"text":"Travelling to St Margaret's","flag":false,"flagNote":null},{"start":600,"end":645,"text":"Wedding rehearsal","flag":true,"flagNote":"Time is provisional"},{"start":645,"end":720,"text":"Travelling to Balliol College","flag":false,"flagNote":null},{"start":720,"end":870,"text":"Free / resting before cricket","flag":false,"flagNote":null},{"start":870,"end":930,"text":"Arriving for cricket","flag":false,"flagNote":null},{"start":930,"end":1080,"text":"Playing cricket — England vs Australia & Friends","flag":true,"flagNote":"Finish time not yet confirmed"},{"start":1080,"end":1320,"text":"Free evening — Jericho Airbnb with the groomsparty","flag":false,"flagNote":null}],"laura":[{"start":480,"end":540,"text":"Free morning, at Dove House Farm","flag":false,"flagNote":null},{"start":540,"end":600,"text":"Travelling to St Margaret's","flag":false,"flagNote":null},{"start":600,"end":645,"text":"Wedding rehearsal","flag":true,"flagNote":"Time is provisional"},{"start":645,"end":720,"text":"Travelling back to Dove House Farm","flag":false,"flagNote":null},{"start":720,"end":870,"text":"Free / resting","flag":false,"flagNote":null},{"start":870,"end":930,"text":"Arriving for cricket","flag":false,"flagNote":null},{"start":930,"end":1080,"text":"Watching cricket","flag":true,"flagNote":"Finish time not yet confirmed"},{"start":1080,"end":1320,"text":"Free evening, Dove House Farm","flag":false,"flagNote":null}],"groomsparty":[{"start":480,"end":540,"text":"Dropping off ceremony & reception kit at the venue","flag":true,"flagNote":"Who's doing the drop-off (groomsparty vs a delivery/hired van) isn't fully confirmed yet"},{"start":540,"end":600,"text":"Travelling to St Margaret's","flag":false,"flagNote":null},{"start":600,"end":645,"text":"Wedding rehearsal","flag":true,"flagNote":"Time is provisional"},{"start":645,"end":720,"text":"Travelling to Balliol College","flag":false,"flagNote":null},{"start":720,"end":870,"text":"Setting up for cricket — Balliol College, Master's Field","flag":false,"flagNote":null},{"start":870,"end":930,"text":"Guests arriving for cricket","flag":false,"flagNote":null},{"start":930,"end":1080,"text":"Playing cricket","flag":true,"flagNote":"Finish time not yet confirmed"},{"start":1080,"end":1320,"text":"Free evening — Jericho Airbnb","flag":false,"flagNote":null}],"bridal":[{"start":480,"end":540,"text":"Free morning, at Dove House Farm","flag":false,"flagNote":null},{"start":540,"end":600,"text":"Travelling to St Margaret's","flag":false,"flagNote":null},{"start":600,"end":645,"text":"Wedding rehearsal","flag":true,"flagNote":"Time is provisional"},{"start":645,"end":720,"text":"Travelling back to Dove House Farm","flag":false,"flagNote":null},{"start":720,"end":870,"text":"Free / resting","flag":false,"flagNote":null},{"start":870,"end":930,"text":"Arriving for cricket","flag":false,"flagNote":null},{"start":930,"end":1080,"text":"Watching cricket","flag":true,"flagNote":"Finish time not yet confirmed"},{"start":1080,"end":1320,"text":"Free evening, Dove House Farm","flag":false,"flagNote":null}],"family":[{"start":480,"end":540,"text":"—","flag":false,"flagNote":null},{"start":540,"end":600,"text":"Travelling to St Margaret's","flag":false,"flagNote":null},{"start":600,"end":645,"text":"Wedding rehearsal — readers & witnesses run through their parts","flag":true,"flagNote":"Time is provisional"},{"start":645,"end":720,"text":"—","flag":false,"flagNote":null},{"start":720,"end":870,"text":"Free / resting","flag":false,"flagNote":null},{"start":870,"end":930,"text":"Arriving for cricket","flag":false,"flagNote":null},{"start":930,"end":1080,"text":"Watching cricket","flag":true,"flagNote":"Finish time not yet confirmed"},{"start":1080,"end":1320,"text":"Free evening","flag":false,"flagNote":null}],"guests":[{"start":480,"end":870,"text":"—","flag":false,"flagNote":null},{"start":870,"end":930,"text":"Optional — arriving for cricket, Balliol College Master's Field","flag":false,"flagNote":null},{"start":930,"end":1080,"text":"Optional — watching/playing cricket","flag":true,"flagNote":"Finish time not yet confirmed"},{"start":1080,"end":1320,"text":"—","flag":false,"flagNote":null}]},"location":[{"start":480,"end":540,"text":"Groomsmen's flat, Oxford / Dove House Farm","flag":false,"flagNote":null},{"start":540,"end":600,"text":"Route to St Margaret's","flag":false,"flagNote":null},{"start":600,"end":645,"text":"St Margaret's Church","flag":false,"flagNote":null},{"start":645,"end":720,"text":"Route to Balliol College","flag":false,"flagNote":null},{"start":720,"end":1080,"text":"Balliol College, Master's Field, Jowett Walk","flag":false,"flagNote":null},{"start":1080,"end":1320,"text":"Dove House Farm / Jericho Airbnb","flag":false,"flagNote":null}],"sections":[{"label":"Morning — drop-off & rehearsal","start":480},{"label":"Cricket setup","start":720},{"label":"Cricket","start":870},{"label":"Evening — free","start":1080}]};
+
+    var SUNDAY_SCHEDULE = {"key":"sunday","label":"Sunday 23 August 2026","dayStart":480,"dayEnd":1320,"tracks":{"ed":[{"start":480,"end":780,"text":"Free morning — breakfast, relaxing at Dove House Farm","flag":false,"flagNote":null},{"start":780,"end":1320,"text":"BBQ at Dove House Farm","flag":true,"flagNote":"End time not yet set"}],"laura":[{"start":480,"end":780,"text":"Free morning — breakfast, relaxing at Dove House Farm","flag":false,"flagNote":null},{"start":780,"end":1320,"text":"BBQ at Dove House Farm","flag":true,"flagNote":"End time not yet set"}],"groomsparty":[{"start":480,"end":780,"text":"Free morning / travelling to Dove House Farm","flag":false,"flagNote":null},{"start":780,"end":1320,"text":"BBQ at Dove House Farm","flag":true,"flagNote":"End time not yet set"}],"bridal":[{"start":480,"end":780,"text":"Free morning, at Dove House Farm","flag":false,"flagNote":null},{"start":780,"end":1320,"text":"BBQ at Dove House Farm","flag":true,"flagNote":"End time not yet set"}],"family":[{"start":480,"end":780,"text":"Free morning","flag":false,"flagNote":null},{"start":780,"end":1320,"text":"BBQ at Dove House Farm — close friends & family","flag":true,"flagNote":"End time not yet set"}],"guests":[{"start":480,"end":1320,"text":"—","flag":false,"flagNote":null}]},"location":[{"start":480,"end":780,"text":"Dove House Farm / travelling","flag":false,"flagNote":null},{"start":780,"end":1320,"text":"Dove House Farm","flag":false,"flagNote":null}],"sections":[{"label":"Morning — free / departures","start":480},{"label":"BBQ at Dove House Farm","start":780}]};
+
+    var DEFAULT_SCHEDULE = { days: [FRIDAY_SCHEDULE, SATURDAY_SCHEDULE, SUNDAY_SCHEDULE] };
 
     var state = null;
+    var activeDayIndex = 1; // defaults to Saturday - the main event
 
     function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
 
-    function isValidSchedule(payload){
-      return !!(payload && payload.tracks && TRACK_KEYS.every(function(k){
-        return Array.isArray(payload.tracks[k]) && payload.tracks[k].length > 0;
+    function isValidDay(d){
+      return !!(d && d.tracks && TRACK_KEYS.every(function(k){
+        return Array.isArray(d.tracks[k]) && d.tracks[k].length > 0;
       }));
     }
+
+    function isValidSchedule(payload){
+      return !!(payload && Array.isArray(payload.days) && payload.days.length > 0 && payload.days.every(isValidDay));
+    }
+
+    // Saves made before Friday/Sunday existed are a single day's worth of
+    // tracks/location/sections with no .days wrapper - promote it into the
+    // Saturday slot so Ed's live edits survive, and bolt the fresh Friday/
+    // Sunday plans on either side rather than discarding it.
+    function migrateLegacySchedule(payload){
+      if(!isValidDay(payload)) return null;
+      var saturday = deepClone(payload);
+      saturday.key = 'saturday';
+      saturday.label = 'Saturday 22 August 2026';
+      return { days: [deepClone(FRIDAY_SCHEDULE), saturday, deepClone(SUNDAY_SCHEDULE)] };
+    }
+
+    function currentDay(){ return state.days[activeDayIndex]; }
 
     function pad2(n){ return (n < 10 ? '0' : '') + n; }
 
@@ -2420,14 +2506,15 @@
     // so every divider whose start falls at-or-before t pushes everything
     // after it down by one band's height.
     function yFor(t){
+      var day = currentDay();
       var bands = 0;
-      for(var i = 0; i < state.sections.length; i++){
-        if(state.sections[i].start <= t) bands++;
+      for(var i = 0; i < day.sections.length; i++){
+        if(day.sections[i].start <= t) bands++;
       }
-      return (t - state.dayStart) * PX_PER_MIN + bands * DIVIDER_H;
+      return (t - day.dayStart) * PX_PER_MIN + bands * DIVIDER_H;
     }
 
-    function totalHeight(){ return yFor(state.dayEnd); }
+    function totalHeight(){ return yFor(currentDay().dayEnd); }
 
     var saveRemote = ccDebounce(function(){
       ccApiPost('schedule', state);
@@ -2448,7 +2535,7 @@
     var modalWired = false;
 
     function openEditor(trackKey, idx){
-      var b = state.tracks[trackKey][idx];
+      var b = currentDay().tracks[trackKey][idx];
       if(!b) return;
       editingTrack = trackKey;
       editingIndex = idx;
@@ -2458,7 +2545,7 @@
       document.getElementById('schedEditFlag').checked = !!b.flag;
       document.getElementById('schedEditNote').value = b.flagNote || '';
       document.getElementById('schedEditNoteRow').style.display = b.flag ? '' : 'none';
-      document.getElementById('schedEditDelete').disabled = state.tracks[trackKey].length <= 1;
+      document.getElementById('schedEditDelete').disabled = currentDay().tracks[trackKey].length <= 1;
       document.getElementById('schedEditSplit').disabled = (b.end - b.start) < MIN_BLOCK * 2;
       document.getElementById('scheduleEditModal').hidden = false;
       document.getElementById('schedEditText').focus();
@@ -2472,7 +2559,7 @@
 
     function saveEditor(){
       if(editingTrack === null) return;
-      var b = state.tracks[editingTrack][editingIndex];
+      var b = currentDay().tracks[editingTrack][editingIndex];
       var text = document.getElementById('schedEditText').value.trim();
       b.text = text || '—';
       b.flag = document.getElementById('schedEditFlag').checked;
@@ -2488,7 +2575,7 @@
     // if this is the very first block in the track.
     function deleteEditingBlock(){
       if(editingTrack === null) return;
-      var blocks = state.tracks[editingTrack];
+      var blocks = currentDay().tracks[editingTrack];
       if(blocks.length <= 1) return;
       var idx = editingIndex;
       if(idx > 0){
@@ -2507,7 +2594,7 @@
     // as a placeholder "New event" block ready to be tapped and renamed.
     function splitEditingBlock(){
       if(editingTrack === null) return;
-      var blocks = state.tracks[editingTrack];
+      var blocks = currentDay().tracks[editingTrack];
       var b = blocks[editingIndex];
       if(b.end - b.start < MIN_BLOCK * 2) return;
       var mid = snap15(b.start + (b.end - b.start) / 2);
@@ -2543,7 +2630,7 @@
       handle.addEventListener('pointerdown', function(e){
         if(e.button !== undefined && e.button !== 0) return;
         e.preventDefault();
-        var blocks = state.tracks[trackKey];
+        var blocks = currentDay().tracks[trackKey];
         var startClientY = e.clientY;
         var startBoundary = blocks[idx].end;
         var minBoundary = blocks[idx].start + MIN_BLOCK;
@@ -2558,8 +2645,8 @@
           var next = snap15(startBoundary + deltaMin);
           if(next < minBoundary) next = minBoundary;
           if(next > maxBoundary) next = maxBoundary;
-          if(next < state.dayStart) next = state.dayStart;
-          if(next > state.dayEnd) next = state.dayEnd;
+          if(next < currentDay().dayStart) next = currentDay().dayStart;
+          if(next > currentDay().dayEnd) next = currentDay().dayEnd;
           if(next !== blocks[idx].end){
             blocks[idx].end = next;
             blocks[idx + 1].start = next;
@@ -2653,13 +2740,14 @@
 
       var body = document.createElement('div');
       body.className = 'sched-tl-body';
+      var day = currentDay();
       var h = totalHeight();
       body.style.height = h + 'px';
 
       var gutter = document.createElement('div');
       gutter.className = 'sched-tl-gutter';
       gutter.style.height = h + 'px';
-      for(var m = state.dayStart; m <= state.dayEnd; m += 60){
+      for(var m = day.dayStart; m <= day.dayEnd; m += 60){
         var label = document.createElement('div');
         label.className = 'sched-tl-hour';
         label.style.top = yFor(m) + 'px';
@@ -2668,7 +2756,7 @@
       }
       body.appendChild(gutter);
 
-      for(var m2 = state.dayStart; m2 <= state.dayEnd; m2 += 60){
+      for(var m2 = day.dayStart; m2 <= day.dayEnd; m2 += 60){
         var line = document.createElement('div');
         line.className = 'sched-tl-gridline';
         line.style.top = yFor(m2) + 'px';
@@ -2676,12 +2764,12 @@
       }
 
       TRACK_KEYS.forEach(function(k){
-        body.appendChild(renderColumn(k, state.tracks[k] || [], true));
+        body.appendChild(renderColumn(k, day.tracks[k] || [], true));
       });
-      body.appendChild(renderColumn('location', state.location || [], false));
+      body.appendChild(renderColumn('location', day.location || [], false));
 
-      state.sections.forEach(function(sec, i){
-        var y0 = (sec.start - state.dayStart) * PX_PER_MIN + DIVIDER_H * i;
+      day.sections.forEach(function(sec, i){
+        var y0 = (sec.start - day.dayStart) * PX_PER_MIN + DIVIDER_H * i;
         var band = document.createElement('div');
         band.className = 'sched-tl-divider';
         band.style.top = y0 + 'px';
@@ -2693,12 +2781,44 @@
       inner.appendChild(body);
       container.innerHTML = '';
       container.appendChild(inner);
+
+      var tag = document.getElementById('scheduleDayTag');
+      if(tag) tag.textContent = day.label + ' · drag a boundary to reschedule';
+    }
+
+    // Day tabs (Friday / Saturday / Sunday) switch which day's timeline is
+    // showing - wired once, then just re-marked "active" on every render()
+    // rather than rebuilt, since render() already runs on every edit.
+    function renderDayTabs(){
+      var wrap = document.getElementById('scheduleDayTabs');
+      if(!wrap) return;
+      wrap.innerHTML = '';
+      state.days.forEach(function(d, i){
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = d.label.split(' ').slice(0, 2).join(' '); // "Friday 21"
+        btn.className = i === activeDayIndex ? 'active' : '';
+        btn.addEventListener('click', function(){
+          if(activeDayIndex === i) return;
+          activeDayIndex = i;
+          renderDayTabs();
+          render();
+        });
+        wrap.appendChild(btn);
+      });
     }
 
     return {
       init: function(payload){
-        state = isValidSchedule(payload) ? deepClone(payload) : deepClone(DEFAULT_SCHEDULE);
+        if(isValidSchedule(payload)){
+          state = deepClone(payload);
+        } else {
+          state = migrateLegacySchedule(payload) || deepClone(DEFAULT_SCHEDULE);
+          persist();
+        }
+        activeDayIndex = Math.max(0, state.days.map(function(d){ return d.key; }).indexOf('saturday'));
         wireModalOnce();
+        renderDayTabs();
         render();
       }
     };
